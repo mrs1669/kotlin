@@ -718,6 +718,16 @@ The corresponding calls' declarations may not be marked with @BuilderInference."
         }
 
     @Argument(
+        value = "-Xskip-fragments-verification",
+        description = "Allow compiling without verification of fragments.",
+    )
+    var skipFragmentsVerification = false
+        set(value) {
+            checkFrozen()
+            field = value
+        }
+
+    @Argument(
         value = "-Xignore-const-optimization-errors",
         description = "Ignore all compilation exceptions while optimizing some constant expressions."
     )
