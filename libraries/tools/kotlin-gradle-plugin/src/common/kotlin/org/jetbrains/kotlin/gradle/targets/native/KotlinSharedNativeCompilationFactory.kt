@@ -56,7 +56,7 @@ open class KotlinSharedNativeCompilationFactory internal constructor(
 
     override fun create(name: String): KotlinSharedNativeCompilation {
         return target.project.objects.newInstance(
-            itemClass, konanTargets.toList(), compilationImplFactory.create(target, name)
+            itemClass, target.project, konanTargets.toList(), compilationImplFactory.create(target, name)
         )
     }
 }
