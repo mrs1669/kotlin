@@ -17,6 +17,7 @@ import org.jetbrains.kotlin.analysis.api.symbols.KtValueParameterSymbol
 import org.jetbrains.kotlin.analysis.api.types.KtType
 import org.jetbrains.kotlin.descriptors.ClassKind
 import org.jetbrains.kotlin.fir.declarations.*
+import org.jetbrains.kotlin.fir.declarations.utils.isConst
 import org.jetbrains.kotlin.fir.expressions.FirPropertyAccessExpression
 import org.jetbrains.kotlin.fir.references.impl.FirPropertyFromParameterResolvedNamedReference
 import org.jetbrains.kotlin.fir.symbols.FirBasedSymbol
@@ -109,14 +110,18 @@ internal fun FirVariableSymbol<*>.getKtConstantInitializer(builder: KtSymbolByFi
     // to avoid lazy resolve
     if (fir.initializer == null) return null
 
-    lazyResolveToPhase(FirResolvePhase.BODY_RESOLVE)
+    // `const` property can be resolved to `IMPLICIT_TYPES_BODY_RESOLVE` phase.
+    // Everything else (like defaults of annotation's constructor) to the `BODY_RESOLVE` phase
+    lazyResolveToPhase(if (this.isConst) FirResolvePhase.IMPLICIT_TYPES_BODY_RESOLVE else FirResolvePhase.BODY_RESOLVE)
     var firInitializer = fir.initializer ?: return null
     if (firInitializer is FirPropertyAccessExpression) {
         val calleeReference = firInitializer.calleeReference
         if (calleeReference is FirPropertyFromParameterResolvedNamedReference) {
             val valueParameterSymbol = calleeReference.resolvedSymbol as? FirValueParameterSymbol
             if (valueParameterSymbol != null) {
-                valueParameterSymbol.lazyResolveToPhase(FirResolvePhase.BODY_RESOLVE)
+                valueParameterSymbol.lazyResolveToPhase(
+                    if (valueParameterSymbol.isConst) FirResolvePhase.IMPLICIT_TYPES_BODY_RESOLVE else FirResolvePhase.BODY_RESOLVE
+                )
                 firInitializer = valueParameterSymbol.fir.defaultValue ?: firInitializer
             }
         }
