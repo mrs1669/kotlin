@@ -1,0 +1,20 @@
+@kotlin.Metadata
+public interface DiamondInterface {
+    // source: 'interfaces.kt'
+}
+
+@kotlin.Metadata
+public final class KotlinImpl {
+    // source: 'main.kt'
+    public method <init>(): void
+    public bridge final method charAt(p0: int): char
+    public bridge method get(p0: int): char
+    public bridge method getLength(): int
+    public bridge final method length(): int
+}
+
+@kotlin.Metadata
+public interface LengthInterface {
+    // source: 'interfaces.kt'
+    public abstract method getLength(): int
+}

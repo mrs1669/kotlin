@@ -189,7 +189,11 @@ class FirSignatureEnhancement(
                 return buildSyntheticProperty {
                     moduleData = this@FirSignatureEnhancement.moduleData
                     this.name = name
-                    symbol = FirJavaOverriddenSyntheticPropertySymbol(accessorSymbol.callableId, accessorSymbol.getterId)
+                    symbol = FirJavaOverriddenSyntheticPropertySymbol(
+                        accessorSymbol.callableId,
+                        accessorSymbol.getterId,
+                        (accessorSymbol as? FirJavaOverriddenSyntheticPropertySymbol)?.overriddenKotlinProperty
+                    )
                     delegateGetter = enhancedGetterSymbol?.fir as FirSimpleFunction? ?: getterDelegate
                     delegateSetter = enhancedSetterSymbol?.fir as FirSimpleFunction? ?: setterDelegate
                     status = firElement.status

@@ -56,6 +56,24 @@ public class FirPsiBytecodeListingTestGenerated extends AbstractFirPsiBytecodeLi
   }
 
   @Test
+  @TestMetadata("bridgeForJavaSyntheticProperty.kt")
+  public void testBridgeForJavaSyntheticProperty() {
+    runTest("compiler/testData/codegen/bytecodeListing/bridgeForJavaSyntheticProperty.kt");
+  }
+
+  @Test
+  @TestMetadata("bridgeGenerationForIntersectionOverride.kt")
+  public void testBridgeGenerationForIntersectionOverride() {
+    runTest("compiler/testData/codegen/bytecodeListing/bridgeGenerationForIntersectionOverride.kt");
+  }
+
+  @Test
+  @TestMetadata("bridgeGenerationForSubstitutionOverride.kt")
+  public void testBridgeGenerationForSubstitutionOverride() {
+    runTest("compiler/testData/codegen/bytecodeListing/bridgeGenerationForSubstitutionOverride.kt");
+  }
+
+  @Test
   @TestMetadata("callableNameIntrinsic.kt")
   public void testCallableNameIntrinsic() {
     runTest("compiler/testData/codegen/bytecodeListing/callableNameIntrinsic.kt");

@@ -20,8 +20,9 @@ import org.jetbrains.kotlin.fir.declarations.impl.FirDefaultPropertyGetter
 import org.jetbrains.kotlin.fir.declarations.impl.FirDefaultPropertySetter
 import org.jetbrains.kotlin.fir.declarations.primaryConstructorIfAny
 import org.jetbrains.kotlin.fir.declarations.utils.*
-import org.jetbrains.kotlin.fir.expressions.FirLiteralExpression
 import org.jetbrains.kotlin.fir.expressions.FirExpression
+import org.jetbrains.kotlin.fir.expressions.FirLiteralExpression
+import org.jetbrains.kotlin.fir.java.symbols.FirJavaOverriddenSyntheticPropertySymbol
 import org.jetbrains.kotlin.fir.resolve.toFirRegularClass
 import org.jetbrains.kotlin.fir.symbols.lazyResolveToPhase
 import org.jetbrains.kotlin.fir.types.coneType
@@ -259,8 +260,18 @@ class Fir2IrLazyProperty(
         if (containingClass == null || parent !is Fir2IrLazyClass) return emptyList()
         val baseFunctionWithDispatchReceiverTag =
             fakeOverrideGenerator.computeBaseSymbolsWithContainingClass(containingClass, fir.symbol)
-        return baseFunctionWithDispatchReceiverTag.map { (symbol, dispatchReceiverLookupTag) ->
-            declarationStorage.getIrPropertySymbol(symbol, dispatchReceiverLookupTag) as IrPropertySymbol
+        return buildList {
+            addAll(baseFunctionWithDispatchReceiverTag.map { (symbol, dispatchReceiverLookupTag) ->
+                declarationStorage.getIrPropertySymbol(symbol, dispatchReceiverLookupTag) as IrPropertySymbol
+            })
+
+            // FirJavaOverriddenSyntheticPropertySymbol is a special case
+            // We have to include overridden kotlin property, which may be not in superclass and will be missed in the list of base symbols
+            // See bridgeForJavaSyntheticProperty.kt for example
+            val symbol = fir.symbol
+            if (symbol is FirJavaOverriddenSyntheticPropertySymbol && symbol.overriddenKotlinProperty != null) {
+                add(declarationStorage.getIrPropertySymbol(symbol.overriddenKotlinProperty!!) as IrPropertySymbol)
+            }
         }
     }
 
