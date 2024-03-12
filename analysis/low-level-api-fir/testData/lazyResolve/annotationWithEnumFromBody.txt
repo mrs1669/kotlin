@@ -413,7 +413,7 @@ FILE: [ResolvedTo(IMPORTS)] annotationWithEnumFromBody.kt
             }
 
             public final static [ResolvedTo(STATUS)] [ContainingClassKey=MyLevel] enum entry WARNING: R|WithEnumFromBody.MyLevel|
-            public final static [ResolvedTo(STATUS)] [ContainingClassKey=MyLevel] enum entry ERROR: R|WithEnumFromBody.MyLevel|
+            public final static [ResolvedTo(IMPLICIT_TYPES_BODY_RESOLVE)] [ContainingClassKey=MyLevel] enum entry ERROR: R|WithEnumFromBody.MyLevel|
             public final static [ResolvedTo(STATUS)] [ContainingClassKey=MyLevel] fun values(): R|kotlin/Array<WithEnumFromBody.MyLevel>| {
             }
 
