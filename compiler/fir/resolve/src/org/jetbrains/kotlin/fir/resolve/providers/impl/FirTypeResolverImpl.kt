@@ -425,7 +425,8 @@ class FirTypeResolverImpl(private val session: FirSession) : FirTypeResolver() {
         isOperandOfIsOperator: Boolean,
         resolveDeprecations: Boolean,
         useSiteFile: FirFile?,
-        supertypeSupplier: SupertypeSupplier
+        supertypeSupplier: SupertypeSupplier,
+        expandTypeAliases: Boolean,
     ): FirTypeResolutionResult {
         return when (typeRef) {
             is FirResolvedTypeRef -> error("Do not resolve, resolved type-refs")
@@ -438,7 +439,13 @@ class FirTypeResolverImpl(private val session: FirSession) : FirTypeResolver() {
                     scopeClassDeclaration.topContainer ?: scopeClassDeclaration.containingDeclarations.lastOrNull(),
                     isOperandOfIsOperator,
                 )
-                FirTypeResolutionResult(resolvedType, (result as? TypeResolutionResult.Resolved)?.typeCandidate?.diagnostic)
+                val resolvedExpandedType = when {
+                    expandTypeAliases && resolvedType.toSymbol(session) is FirTypeAliasSymbol -> {
+                        resolvedType.fullyExpandedType(session) + AbbreviatedTypeAttribute(resolvedType)
+                    }
+                    else -> resolvedType
+                }
+                FirTypeResolutionResult(resolvedExpandedType, (result as? TypeResolutionResult.Resolved)?.typeCandidate?.diagnostic)
             }
             is FirFunctionTypeRef -> createFunctionType(typeRef)
             is FirDynamicTypeRef -> {
@@ -462,6 +469,7 @@ class FirTypeResolverImpl(private val session: FirSession) : FirTypeResolver() {
         }
     }
 
+    private operator fun ConeKotlinType.plus(attribute: ConeAttribute<*>): ConeKotlinType = withAttributes(attributes + attribute)
 
     class TypeCandidate(
         override val symbol: FirBasedSymbol<*>,
