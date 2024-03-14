@@ -42,17 +42,13 @@ class ParcelizeEnvironmentConfigurator(testServices: TestServices) : Environment
                 kotlinxCollectionsImmutable
             )
         )
-
-        // Hard coding a name of an additional annotation for parcelize. Test that use this, need to provide the
-        // additional annotations as part of the test sources.
-        configuration.put(ParcelizeConfigurationKeys.ADDITIONAL_ANNOTATION, listOf("test.TriggerParcelize"))
     }
 
     override fun CompilerPluginRegistrar.ExtensionStorage.registerCompilerExtensions(
         module: TestModule,
         configuration: CompilerConfiguration
     ) {
-        val additionalAnnotation = configuration.get(ParcelizeConfigurationKeys.ADDITIONAL_ANNOTATION) ?: emptyList()
+        val additionalAnnotation = configuration.get(ParcelizeConfigurationKeys.ADDITIONAL_ANNOTATION)
         ParcelizeComponentRegistrar.registerParcelizeComponents(
             this,
             additionalAnnotation,

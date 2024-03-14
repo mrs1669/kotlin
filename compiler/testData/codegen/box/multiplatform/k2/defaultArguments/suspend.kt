@@ -1,5 +1,6 @@
 // LANGUAGE: +MultiPlatformProjects
 // WITH_STDLIB
+// WITH_COROUTINES
 
 // MODULE: common
 // FILE: common.kt
@@ -9,7 +10,6 @@ expect interface I {
 }
 
 // MODULE: main()()(common)
-// WITH_COROUTINES
 // FILE: main.kt
 import kotlin.coroutines.*
 import helpers.*

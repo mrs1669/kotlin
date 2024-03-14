@@ -5,10 +5,8 @@
 
 package org.jetbrains.kotlin.wasm.test
 
-import org.jetbrains.kotlin.config.LanguageFeature
 import org.jetbrains.kotlin.idea.KotlinFileType
 import org.jetbrains.kotlin.test.directives.JsEnvironmentConfigurationDirectives
-import org.jetbrains.kotlin.test.directives.WasmEnvironmentConfigurationDirectives
 import org.jetbrains.kotlin.test.directives.model.RegisteredDirectives
 import org.jetbrains.kotlin.test.model.TestFile
 import org.jetbrains.kotlin.test.model.TestModule
@@ -26,12 +24,7 @@ class WasmWasiBoxTestHelperSourceProvider(testServices: TestServices) : Addition
 
 class WasmAdditionalSourceProvider(testServices: TestServices) : AdditionalSourceProvider(testServices) {
     override fun produceAdditionalFiles(globalDirectives: RegisteredDirectives, module: TestModule): List<TestFile> {
-        if (WasmEnvironmentConfigurationDirectives.NO_COMMON_FILES in module.directives) return emptyList()
-        // For multiplatform projects, add the files only to common modules with no dependencies.
-        if (module.languageVersionSettings.supportsFeature(LanguageFeature.MultiPlatformProjects) &&
-            module.allDependencies.isNotEmpty()) {
-            return emptyList()
-        }
+        if (JsEnvironmentConfigurationDirectives.NO_COMMON_FILES in module.directives) return emptyList()
         return getAdditionalKotlinFiles(module.files.first().originalFile.parent).map { it.toTestFile() }
     }
 
