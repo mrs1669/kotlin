@@ -14,15 +14,13 @@ import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.util.companionObject
 import org.jetbrains.kotlin.ir.util.functions
 import org.jetbrains.kotlin.ir.util.render
-import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.parcelize.ParcelizeNames.PARCELER_FQN
 import org.jetbrains.kotlin.parcelize.fir.ParcelizePluginKey
 
 class ParcelizeFirIrTransformer(
     context: IrPluginContext,
-    androidSymbols: AndroidSymbols,
-    parcelizeAnnotations: List<FqName>
-) : ParcelizeIrTransformerBase(context, androidSymbols, parcelizeAnnotations) {
+    androidSymbols: AndroidSymbols
+) : ParcelizeIrTransformerBase(context, androidSymbols) {
 
     fun transform(moduleFragment: IrModuleFragment) {
         moduleFragment.accept(this, null)
@@ -36,7 +34,7 @@ class ParcelizeFirIrTransformer(
 
         // Sealed classes can be annotated with `@Parcelize`, but that only implies that we
         // should process their immediate subclasses.
-        if (!declaration.isParcelize(parcelizeAnnotations) || declaration.modality == Modality.SEALED)
+        if (!declaration.isParcelize || declaration.modality == Modality.SEALED)
             return
 
         val parcelableProperties = declaration.parcelableProperties

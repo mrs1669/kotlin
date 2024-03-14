@@ -23,13 +23,13 @@ import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.parcelize.ParcelizeNames
 import org.jetbrains.kotlin.parcelize.ParcelizeNames.DEPRECATED_RUNTIME_PACKAGE
 import org.jetbrains.kotlin.parcelize.ParcelizeNames.IGNORED_ON_PARCEL_CLASS_IDS
+import org.jetbrains.kotlin.parcelize.ParcelizeNames.PARCELIZE_CLASS_CLASS_IDS
 import org.jetbrains.kotlin.parcelize.ParcelizeNames.RAW_VALUE_ANNOTATION_CLASS_IDS
 import org.jetbrains.kotlin.parcelize.ParcelizeNames.TYPE_PARCELER_CLASS_IDS
 import org.jetbrains.kotlin.parcelize.ParcelizeNames.WRITE_WITH_CLASS_IDS
 
 // TODO: extract common checker for expect interfaces
-class FirParcelizeAnnotationChecker(private val parcelizeAnnotationClassIds: List<ClassId>) :
-    FirAnnotationCallChecker(MppCheckerKind.Platform) {
+object FirParcelizeAnnotationChecker : FirAnnotationCallChecker(MppCheckerKind.Platform) {
     override fun check(expression: FirAnnotationCall, context: CheckerContext, reporter: DiagnosticReporter) {
         val annotationType = expression.annotationTypeRef.coneType.fullyExpandedType(context.session) as? ConeClassLikeType ?: return
         val resolvedAnnotationSymbol = annotationType.lookupTag.toFirRegularClassSymbol(context.session) ?: return
@@ -47,7 +47,7 @@ class FirParcelizeAnnotationChecker(private val parcelizeAnnotationClassIds: Lis
             in IGNORED_ON_PARCEL_CLASS_IDS -> {
                 checkDeprecatedAnnotations(expression, annotationClassId, context, reporter, isForbidden = false)
             }
-            in parcelizeAnnotationClassIds, in RAW_VALUE_ANNOTATION_CLASS_IDS -> {
+            in PARCELIZE_CLASS_CLASS_IDS, in RAW_VALUE_ANNOTATION_CLASS_IDS -> {
                 checkDeprecatedAnnotations(expression, annotationClassId, context, reporter, isForbidden = false)
             }
         }
@@ -148,7 +148,7 @@ class FirParcelizeAnnotationChecker(private val parcelizeAnnotationClassIds: Lis
     private fun checkIfTheContainingClassIsParcelize(annotationCall: FirAnnotationCall, context: CheckerContext, reporter: DiagnosticReporter) {
         val enclosingClass = context.findClosestClassOrObject() ?: return
 
-        if (!enclosingClass.symbol.isParcelize(context.session, parcelizeAnnotationClassIds)) {
+        if (!enclosingClass.symbol.isParcelize(context.session)) {
             val reportElement = annotationCall.calleeReference.source ?: annotationCall.source
             reporter.reportOn(reportElement, KtErrorsParcelize.CLASS_SHOULD_BE_PARCELIZE, enclosingClass.symbol, context)
         }

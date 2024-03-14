@@ -14,7 +14,6 @@ import org.jetbrains.kotlin.container.useInstance
 import org.jetbrains.kotlin.descriptors.ModuleDescriptor
 import org.jetbrains.kotlin.extensions.StorageComponentContainerContributor
 import org.jetbrains.kotlin.fir.extensions.FirExtensionRegistrarAdapter
-import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.parcelize.fir.FirParcelizeExtensionRegistrar
 import org.jetbrains.kotlin.platform.TargetPlatform
 import org.jetbrains.kotlin.platform.jvm.isJvm
@@ -22,44 +21,35 @@ import org.jetbrains.kotlin.resolve.extensions.SyntheticResolveExtension
 
 class ParcelizeComponentRegistrar : CompilerPluginRegistrar() {
     companion object {
-        fun registerParcelizeComponents(
-            extensionStorage: ExtensionStorage,
-            additionalAnnotation: List<String>,
-            useFir: Boolean
-        ) = with(extensionStorage) {
-            val parcelizeAnnotations = ParcelizeNames.PARCELIZE_CLASS_FQ_NAMES.toMutableList()
-            additionalAnnotation.mapTo(parcelizeAnnotations) { FqName(it) }
+        fun registerParcelizeComponents(extensionStorage: ExtensionStorage, useFir: Boolean) = with(extensionStorage) {
             if (useFir) {
-                IrGenerationExtension.registerExtension(ParcelizeFirIrGeneratorExtension(parcelizeAnnotations))
+                IrGenerationExtension.registerExtension(ParcelizeFirIrGeneratorExtension())
             } else {
-                IrGenerationExtension.registerExtension(ParcelizeIrGeneratorExtension(parcelizeAnnotations))
+                IrGenerationExtension.registerExtension(ParcelizeIrGeneratorExtension())
             }
-            SyntheticResolveExtension.registerExtension(ParcelizeResolveExtension(parcelizeAnnotations))
-            StorageComponentContainerContributor.registerExtension(ParcelizeDeclarationCheckerComponentContainerContributor(parcelizeAnnotations))
-            FirExtensionRegistrarAdapter.registerExtension(FirParcelizeExtensionRegistrar(parcelizeAnnotations))
+            SyntheticResolveExtension.registerExtension(ParcelizeResolveExtension())
+            StorageComponentContainerContributor.registerExtension(ParcelizeDeclarationCheckerComponentContainerContributor())
+            FirExtensionRegistrarAdapter.registerExtension(FirParcelizeExtensionRegistrar())
         }
     }
 
     override fun ExtensionStorage.registerExtensions(configuration: CompilerConfiguration) {
-        val additionalAnnotation = configuration.get(ParcelizeConfigurationKeys.ADDITIONAL_ANNOTATION) ?: emptyList()
-        registerParcelizeComponents(this, additionalAnnotation, configuration.getBoolean(CommonConfigurationKeys.USE_FIR))
+        registerParcelizeComponents(this, configuration.getBoolean(CommonConfigurationKeys.USE_FIR))
     }
 
     override val supportsK2: Boolean
         get() = true
 }
 
-class ParcelizeDeclarationCheckerComponentContainerContributor(
-    private val parcelizeAnnotations: List<FqName>
-) : StorageComponentContainerContributor {
+class ParcelizeDeclarationCheckerComponentContainerContributor : StorageComponentContainerContributor {
     override fun registerModuleComponents(
         container: StorageComponentContainer,
         platform: TargetPlatform,
         moduleDescriptor: ModuleDescriptor,
     ) {
         if (platform.isJvm()) {
-            container.useInstance(ParcelizeDeclarationChecker(parcelizeAnnotations))
-            container.useInstance(ParcelizeAnnotationChecker(parcelizeAnnotations))
+            container.useInstance(ParcelizeDeclarationChecker())
+            container.useInstance(ParcelizeAnnotationChecker())
         }
     }
 }

@@ -32,7 +32,7 @@ import org.jetbrains.kotlin.types.isError
 import org.jetbrains.kotlin.types.typeUtil.representativeUpperBound
 import org.jetbrains.kotlin.types.typeUtil.supertypes
 
-open class ParcelizeDeclarationChecker(val parcelizeAnnotations: List<FqName>) : DeclarationChecker {
+open class ParcelizeDeclarationChecker : DeclarationChecker {
     private companion object {
         private val IGNORED_ON_PARCEL_FQ_NAMES = listOf(
             FqName("kotlinx.parcelize.IgnoredOnParcel"),
@@ -71,7 +71,7 @@ open class ParcelizeDeclarationChecker(val parcelizeAnnotations: List<FqName>) :
         declaration: KtFunction,
         diagnosticHolder: DiagnosticSink
     ) {
-        if (!containingClass.isParcelize(parcelizeAnnotations)) {
+        if (!containingClass.isParcelize) {
             return
         }
 
@@ -97,7 +97,7 @@ open class ParcelizeDeclarationChecker(val parcelizeAnnotations: List<FqName>) :
             return property.annotations.hasIgnoredOnParcel() || (property.getter?.annotations?.hasIgnoredOnParcel() ?: false)
         }
 
-        if (containingClass.isParcelize(parcelizeAnnotations)
+        if (containingClass.isParcelize
             && (declaration.hasDelegate() || bindingContext[BindingContext.BACKING_FIELD_REQUIRED, property] == true)
             && !hasIgnoredOnParcel()
             && !containingClass.hasCustomParceler()
@@ -109,7 +109,7 @@ open class ParcelizeDeclarationChecker(val parcelizeAnnotations: List<FqName>) :
         // @JvmName is not applicable to property so we can check just the descriptor name
         if (property.name.asString() == "CREATOR" && property.findJvmFieldAnnotation() != null && containingClass.isCompanionObject) {
             val outerClass = containingClass.containingDeclaration as? ClassDescriptor
-            if (outerClass != null && outerClass.isParcelize(parcelizeAnnotations)) {
+            if (outerClass != null && outerClass.isParcelize) {
                 val reportElement = declaration.nameIdentifier ?: declaration
                 diagnosticHolder.report(ErrorsParcelize.CREATOR_DEFINITION_IS_NOT_ALLOWED.on(reportElement))
             }
@@ -141,7 +141,7 @@ open class ParcelizeDeclarationChecker(val parcelizeAnnotations: List<FqName>) :
         bindingContext: BindingContext,
         languageVersionSettings: LanguageVersionSettings
     ) {
-        if (!descriptor.isParcelize(parcelizeAnnotations)) {
+        if (!descriptor.isParcelize) {
             return
         }
 

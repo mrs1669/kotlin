@@ -6,12 +6,10 @@
 package org.jetbrains.kotlin.parcelize.fir
 
 import org.jetbrains.kotlin.fir.extensions.FirExtensionRegistrar
-import org.jetbrains.kotlin.name.ClassId
-import org.jetbrains.kotlin.name.FqName
 
-class FirParcelizeExtensionRegistrar(val parcelizeAnnotationFqNames: List<FqName>) : FirExtensionRegistrar() {
+class FirParcelizeExtensionRegistrar : FirExtensionRegistrar() {
     override fun ExtensionRegistrarContext.configurePlugin() {
-        +::FirParcelizeDeclarationGenerator.bind(parcelizeAnnotationFqNames)
-        +::FirParcelizeCheckersExtension.bind(parcelizeAnnotationFqNames.map { ClassId.topLevel(it) })
+        +::FirParcelizeDeclarationGenerator
+        +::FirParcelizeCheckersExtension
     }
 }

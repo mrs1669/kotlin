@@ -21,6 +21,8 @@ object ParcelizeNames {
 
     // -------------------- Class ids --------------------
 
+    val PARCELIZE_ID = ClassId(FqName("kotlinx.parcelize"), Name.identifier("Parcelize"))
+    val OLD_PARCELIZE_ID = ClassId(FqName("kotlinx.android.parcel"), Name.identifier("Parcelize"))
     val PARCEL_ID = ClassId(FqName("android.os"), Name.identifier("Parcel"))
     val PARCELABLE_ID = ClassId(FqName("android.os"), Name.identifier("Parcelable"))
     val CREATOR_ID = PARCELABLE_ID.createNestedClassId(Name.identifier("Creator"))
@@ -36,6 +38,8 @@ object ParcelizeNames {
 
     // -------------------- FQNs --------------------
 
+    val PARCELIZE_FQN = PARCELIZE_ID.asSingleFqName()
+    val OLD_PARCELIZE_FQN = OLD_PARCELIZE_ID.asSingleFqName()
     val PARCELABLE_FQN = PARCELABLE_ID.asSingleFqName()
     val CREATOR_FQN = CREATOR_ID.asSingleFqName()
 
