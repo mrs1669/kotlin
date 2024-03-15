@@ -128,3 +128,9 @@ fun Project.assertConfigurationsHaveTaskDependencies(
 
     assertEquals(expectedTaskNames.toSet(), actualNames.toSet(), "Unexpected task dependencies for $configurationName")
 }
+
+fun assertMatches(expected: String, regex: Regex) {
+    if (!expected.matches(regex)) {
+        fail("expected:$expected contained $regex")
+    }
+}

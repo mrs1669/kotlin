@@ -16,13 +16,16 @@ import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 import org.jetbrains.kotlin.gradle.plugin.KotlinTarget
 import org.jetbrains.kotlin.gradle.plugin.PropertiesProvider
+import org.jetbrains.kotlin.gradle.plugin.PropertiesProvider.Companion.KOTLIN_SUPPRESS_GRADLE_PLUGIN_WARNINGS_PROPERTY
 import org.jetbrains.kotlin.gradle.plugin.PropertiesProvider.PropertyNames.KOTLIN_MPP_APPLY_DEFAULT_HIERARCHY_TEMPLATE
 import org.jetbrains.kotlin.gradle.plugin.PropertiesProvider.PropertyNames.KOTLIN_NATIVE_IGNORE_DISABLED_TARGETS
 import org.jetbrains.kotlin.gradle.plugin.PropertiesProvider.PropertyNames.KOTLIN_NATIVE_SUPPRESS_EXPERIMENTAL_ARTIFACTS_DSL_WARNING
 import org.jetbrains.kotlin.gradle.plugin.diagnostics.ToolingDiagnostic.Severity.*
 import org.jetbrains.kotlin.gradle.plugin.sources.android.multiplatformAndroidSourceSetLayoutV1
 import org.jetbrains.kotlin.gradle.plugin.sources.android.multiplatformAndroidSourceSetLayoutV2
+import org.jetbrains.kotlin.gradle.utils.prettyName
 import java.io.File
+
 
 @InternalKotlinGradlePluginApi // used in integration tests
 object KotlinToolingDiagnostics {
@@ -62,12 +65,12 @@ object KotlinToolingDiagnostics {
     object DeprecatedJvmWithJavaPresetDiagnostic : ToolingDiagnosticFactory(ERROR) {
         operator fun invoke() = build(
             """
-                The 'jvmWithJava' preset is deprecated and will be removed soon. Please use an ordinary JVM target with Java support: 
+                The 'jvmWithJava' preset is deprecated and will be removed soon. Please use an ordinary JVM target with Java support:
 
-                    kotlin { 
-                        jvm { 
-                            withJava() 
-                        } 
+                    kotlin {
+                        jvm {
+                            withJava()
+                        }
                     }
             
                 After this change, please move the Java sources to the Kotlin source set directories. 
@@ -243,11 +246,11 @@ object KotlinToolingDiagnostics {
                 KotlinSourceSet with name '$nameOfRequestedSourceSet' not found:
                 The SourceSet requested ('$nameOfRequestedSourceSet') was renamed in Kotlin 1.9.0
                 
-                In order to migrate you might want to replace: 
+                In order to migrate you might want to replace:
                 sourceSets.getByName("androidTest") -> sourceSets.getByName("androidUnitTest")
                 sourceSets.getByName("androidAndroidTest") -> sourceSets.getByName("androidInstrumentedTest")
                 
-                Learn more about the new Kotlin/Android SourceSet Layout: 
+                Learn more about the new Kotlin/Android SourceSet Layout:
                 https://kotl.in/android-source-set-layout-v2
             """.trimIndent()
         )
@@ -674,7 +677,7 @@ object KotlinToolingDiagnostics {
     object KotlinCompilationSourceDeprecation : ToolingDiagnosticFactory(WARNING) {
         operator fun invoke(trace: Throwable?) = build(
             """
-                `KotlinCompilation.source(KotlinSourceSet)` method is deprecated 
+                `KotlinCompilation.source(KotlinSourceSet)` method is deprecated
                 and will be removed in upcoming Kotlin releases.
 
                 See https://kotl.in/compilation-source-deprecation for details.
@@ -753,16 +756,62 @@ object KotlinToolingDiagnostics {
         }
     }
 
-    object IncorrectNativeDependenciesWarning : ToolingDiagnosticFactory(WARNING) {
-        operator fun invoke(targetName: String, compilationName: String, dependencies: List<String>) = build(
-            """
-                A compileOnly dependency is used in the Kotlin/Native target '${targetName}':
-                Compilation: $compilationName
-                
-                Dependencies:
-                ${dependencies.joinToString(separator = "\n")}
-            """.trimIndent()
-        )
+    object IncorrectCompileOnlyDependencyWarning : ToolingDiagnosticFactory(WARNING) {
+
+        operator fun invoke(
+            compilationsWithCompileOnlyDependencies: Map<KotlinCompilation<*>, List<String>>,
+        ): ToolingDiagnostic {
+
+            val formattedPlatformNames = compilationsWithCompileOnlyDependencies.keys
+                .map { it.target.platformType.prettyName }
+                .distinct()
+                .sorted()
+                .joinToString()
+            val formattedCompileOnlyDeps = compilationsWithCompileOnlyDependencies
+                .flatMap { (compilation, dependencies) ->
+                    dependencies.map { dependency -> "$dependency (compilation: ${compilation.name})" }
+                }
+                .distinct()
+                .sorted()
+                .joinToString("\n") { "    - $it" }
+
+            return build(/* language=text */ """
+                |A compileOnly dependency is used in targets: $formattedPlatformNames
+                |Dependencies:
+                |$formattedCompileOnlyDeps
+                |
+                |Using compileOnly dependencies in these targets is not currently supported.
+                |
+                |Kotlin Compilation requires compileOnly dependencies are required during the compilation of projects that depend on this project.
+                |
+                |To ensure consistent compilation behaviour, compileOnly dependencies should be exposed as api dependencies.
+                |
+                |Example:
+                |
+                |    kotlin {
+                |        sourceSets {
+                |            nativeMain {
+                |                dependencies {
+                |                    compileOnly("org.example:lib:1.2.3")
+                |                    // additionally add the compileOnly dependency as an api dependency:
+                |                    api("org.example:lib:1.2.3")
+                |                }
+                |            }
+                |        }
+                |    }
+                |
+                |This warning can be suppressed in by adding the property in gradle.properties:
+                |
+                |    ${KOTLIN_SUPPRESS_GRADLE_PLUGIN_WARNINGS_PROPERTY}=${id}
+                |
+                """.trimMargin()
+            )
+        }
+
+        override val id: String get() = INCORRECT_COMPILE_ONLY_DEPENDENCY_WARNING_ID
+
+        // ID is used in an annotation, so must be a `const val`
+        internal const val INCORRECT_COMPILE_ONLY_DEPENDENCY_WARNING_ID = "IncorrectCompileOnlyDependencyWarning"
     }
 
     private val resourcesBugReportRequest get() = "This is likely a bug in Kotlin Gradle Plugin configuration. Please report this issue to https://kotl.in/issue."
