@@ -16,6 +16,19 @@ import java.util.AbstractList
 // removeRange, modCount: Kotlin `protected` visibility is different from Java
 @Suppress("NO_ACTUAL_CLASS_MEMBER_FOR_EXPECTED_CLASS")
 public actual abstract class AbstractMutableList<E> protected actual constructor() : MutableList<E>, AbstractList<E>() {
+
+    // Workaround for KT-66436
+    protected actual var modCount: Int
+        get() = super.modCount
+        set(value) {
+            super.modCount = value
+        }
+
+    // Workaround for KT-66436
+    protected actual override fun removeRange(fromIndex: Int, toIndex: Int) {
+        super.removeRange(fromIndex, toIndex)
+    }
+
     /**
      * Replaces the element at the specified position in this list with the specified element.
      *
