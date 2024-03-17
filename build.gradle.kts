@@ -726,6 +726,44 @@ tasks {
             }
     }
 
+    register("testAll") {
+        val filterGeneratedTests = project.providers.gradleProperty("kotlin.build.test.filter.generated")
+            .map { it.toBoolean() }.getOrElse(false)
+
+        dependsOn(provider {
+            allprojects.filter { project ->
+                if (filterGeneratedTests)
+                    project.hasGeneratedTests()
+                else true
+            }.flatMap { it.tasks.withType<Test>() }
+        })
+    }
+
+    register("processTeamcityChangeList") {
+        val changeListPath = providers.gradleProperty("kotlin.build.teamcity.change.list")
+        val checkoutDirectoryName = providers.gradleProperty("kotlin.build.teamcity.checkout.dir")
+
+        doFirst {
+            if (changeListPath.isPresent) {
+                val changes = File(changeListPath.get()).readLines()
+                val addedFiles = changes
+                    .map { it.split(":") }
+                    .filter { (_, action) -> action == "ADDED" }
+                    .map { (path, _, _) -> checkoutDirectoryName.map { path.substringAfter("$it/") }.orElse(path).get() }
+
+                addedFiles.forEach { println(it) }
+
+                allprojects
+                    .filter { project ->
+                        project.findJavaPluginExtension() != null && project.sourceSets.findByName("test")?.java?.srcDirs?.any { it.name == "tests-gen" } ?: false
+                    }
+                    .forEach { project ->
+                        println(project.path)
+                    }
+            }
+        }
+    }
+
     named<Delete>("clean") {
         delete(distDir)
         delete(layout.buildDirectory.dir("repo"))

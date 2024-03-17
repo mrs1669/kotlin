@@ -314,3 +314,20 @@ fun skipJvmDefaultAllForModule(path: String): Boolean =
             //     )V from class kotlin.reflect.jvm.internal.impl.resolve.OverridingUtilTypeSystemContext
             // KT-54749
             path == ":core:descriptors"
+
+afterEvaluate {
+    tasks.withType<Test>().configureEach {
+        val includePatterns = project.providers.gradleProperty("kotlin.build.test.filter.includePatterns")
+        if (includePatterns.isPresent) {
+            filter {
+                setIncludePatterns(*includePatterns.get().split(",").toTypedArray())
+                isFailOnNoMatchingTests = false
+            }
+        }
+
+        val filterGeneratedTests = project.providers.gradleProperty("kotlin.build.test.filter.generated")
+        if (filterGeneratedTests.map { it.toBoolean() }.getOrElse(false)) {
+            include("**/*TestGenerated.class")
+        }
+    }
+}

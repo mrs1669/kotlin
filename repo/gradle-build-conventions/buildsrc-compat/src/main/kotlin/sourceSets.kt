@@ -59,6 +59,9 @@ private fun SourceSet.generatedDir(project: Project, dirName: String) {
     }
 }
 
+fun Project.hasGeneratedTests(): Boolean =
+    project.findJavaPluginExtension()?.sourceSets?.findByName("test")?.java?.srcDirs?.any { it.name == "tests-gen" } ?: false
+
 val Project.sourceSets: SourceSetContainer
     get() = javaPluginExtension().sourceSets
 
