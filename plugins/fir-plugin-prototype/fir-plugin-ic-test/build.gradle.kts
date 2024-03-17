@@ -23,6 +23,8 @@ dependencies {
     testRuntimeOnly(commonDependency("org.jetbrains.intellij.deps.fastutil:intellij-deps-fastutil"))
 
     testRuntimeOnly(toolsJar())
+
+    testRuntimeOnly(libs.junit.jupiter.engine)
 }
 
 val generationRoot = projectDir.resolve("tests-gen")
