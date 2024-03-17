@@ -726,6 +726,12 @@ tasks {
             }
     }
 
+    register("testAll") {
+        allprojects {
+            dependsOn(tasks.withType<Test>())
+        }
+    }
+
     named<Delete>("clean") {
         delete(distDir)
         delete(layout.buildDirectory.dir("repo"))

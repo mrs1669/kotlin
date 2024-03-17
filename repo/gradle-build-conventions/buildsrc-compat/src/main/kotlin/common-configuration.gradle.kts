@@ -289,6 +289,19 @@ fun Project.configureTests() {
         if (project.kotlinBuildProperties.limitTestTasksConcurrency) {
             usesService(concurrencyLimitService)
         }
+
+        val includePatterns = project.providers.gradleProperty("kotlin.build.test.filter.includePatterns")
+        if (includePatterns.isPresent) {
+            filter {
+                setIncludePatterns(includePatterns.get())
+                isFailOnNoMatchingTests = false
+            }
+        }
+
+        val filterGeneratedTests = project.providers.gradleProperty("kotlin.build.test.filter.generated")
+        if (filterGeneratedTests.isPresent) {
+            include("**/*TestGenerated.class")
+        }
     }
 
     // Aggregate task for build related checks
