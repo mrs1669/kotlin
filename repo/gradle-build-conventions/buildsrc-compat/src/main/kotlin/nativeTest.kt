@@ -232,15 +232,15 @@ fun Project.nativeTest(
             // This forces to resolve the necessary configurations.
             computedTestProperties.resolveAndApplyToTask()
         }
-    } else
-        doFirst {
-            throw GradleException(
-                """
-                    Can't run task $path. The Kotlin/Native part of the project is currently disabled.
-                    Make sure that "kotlin.native.enabled" is set to "true" in local.properties file, or is passed
-                    as a Gradle command-line parameter via "-Pkotlin.native.enabled=true".
-                """.trimIndent()
-            )
-        }
+    } else {
+        enabled = false
+        logger.info(
+            """
+            Can't run task $path. The Kotlin/Native part of the project is currently disabled.
+            Make sure that "kotlin.native.enabled" is set to "true" in local.properties file, or is passed
+            as a Gradle command-line parameter via "-Pkotlin.native.enabled=true".
+            """.trimIndent()
+        )
+    }
     body()
 }
