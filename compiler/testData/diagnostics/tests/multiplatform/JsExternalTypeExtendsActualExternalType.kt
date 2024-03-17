@@ -11,3 +11,6 @@ external class <!EXTERNAL_TYPE_EXTENDS_NON_EXTERNAL_TYPE!>ExternalClass<!>: Exte
 // FILE: js.kt
 
 actual external interface ExternalInterface
+
+
+
