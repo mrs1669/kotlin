@@ -143,6 +143,7 @@ internal class XcodeProject(private val workDir: Path) {
         testBundle.toFile().deleteRecursively()
         newBundle.toFile().copyRecursively(testBundle.toFile(), overwrite = true)
         // place dSYM too if exists
+        testBundleDSYM.toFile().deleteRecursively()
         val dSYM = newBundle.resolveSibling("${newBundle.name}.dSYM")
         if (dSYM.exists()) {
             dSYM.toFile().copyRecursively(testBundleDSYM.toFile(), overwrite = true)
