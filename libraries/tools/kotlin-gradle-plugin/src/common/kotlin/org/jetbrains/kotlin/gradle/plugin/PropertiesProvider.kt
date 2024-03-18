@@ -55,7 +55,6 @@ import org.jetbrains.kotlin.gradle.plugin.PropertiesProvider.PropertyNames.KOTLI
 import org.jetbrains.kotlin.gradle.plugin.PropertiesProvider.PropertyNames.KOTLIN_STDLIB_JDK_VARIANTS_VERSION_ALIGNMENT
 import org.jetbrains.kotlin.gradle.plugin.PropertiesProvider.PropertyNames.MPP_13X_FLAGS_SET_BY_PLUGIN
 import org.jetbrains.kotlin.gradle.plugin.diagnostics.KotlinToolingDiagnostics
-import org.jetbrains.kotlin.gradle.plugin.diagnostics.KotlinToolingDiagnostics.IncorrectCompileOnlyDependencyWarning.INCORRECT_COMPILE_ONLY_DEPENDENCY_WARNING_ID
 import org.jetbrains.kotlin.gradle.plugin.diagnostics.reportDiagnostic
 import org.jetbrains.kotlin.gradle.plugin.diagnostics.reportDiagnosticOncePerBuild
 import org.jetbrains.kotlin.gradle.plugin.mpp.resources.resolve.KotlinTargetResourcesResolutionStrategy
@@ -211,7 +210,9 @@ internal class PropertiesProvider private constructor(private val project: Proje
     val mppResourcesResolutionStrategy: KotlinTargetResourcesResolutionStrategy
         get() = this.get(KOTLIN_MPP_RESOURCES_RESOLUTION_STRATEGY)?.let {
             val strategy = KotlinTargetResourcesResolutionStrategy.fromProperty(it)
-            if (strategy == null) { project.reportDiagnostic(KotlinToolingDiagnostics.UnknownValueProvidedForResourcesStrategy(it)) }
+            if (strategy == null) {
+                project.reportDiagnostic(KotlinToolingDiagnostics.UnknownValueProvidedForResourcesStrategy(it))
+            }
             return@let strategy
         } ?: KotlinTargetResourcesResolutionStrategy.VariantReselection
 
@@ -243,7 +244,8 @@ internal class PropertiesProvider private constructor(private val project: Proje
     val ignoreDisabledCInteropCommonization: Boolean
         get() = booleanProperty("$KOTLIN_MPP_ENABLE_CINTEROP_COMMONIZATION.nowarn") ?: false
 
-    @Deprecated("Please set \"$KOTLIN_SUPPRESS_GRADLE_PLUGIN_WARNINGS_PROPERTY=${INCORRECT_COMPILE_ONLY_DEPENDENCY_WARNING_ID}\" in gradle.properties instead")
+    /** @see org.jetbrains.kotlin.gradle.plugin.diagnostics.KotlinToolingDiagnostics.IncorrectCompileOnlyDependencyWarning */
+    @Deprecated("Replaced with diagnostic IncorrectCompileOnlyDependencyWarning")
     val ignoreIncorrectNativeDependencies: Boolean?
         get() = booleanProperty("kotlin.native.ignoreIncorrectDependencies")
 

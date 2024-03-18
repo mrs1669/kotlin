@@ -817,11 +817,6 @@ object KotlinToolingDiagnostics {
                 """.trimMargin()
             )
         }
-
-        override val id: String get() = INCORRECT_COMPILE_ONLY_DEPENDENCY_WARNING_ID
-
-        // ID is used in an annotation, so must be a `const val`
-        internal const val INCORRECT_COMPILE_ONLY_DEPENDENCY_WARNING_ID = "IncorrectCompileOnlyDependencyWarning"
     }
 
     private val resourcesBugReportRequest get() = "This is likely a bug in Kotlin Gradle Plugin configuration. Please report this issue to https://kotl.in/issue."
