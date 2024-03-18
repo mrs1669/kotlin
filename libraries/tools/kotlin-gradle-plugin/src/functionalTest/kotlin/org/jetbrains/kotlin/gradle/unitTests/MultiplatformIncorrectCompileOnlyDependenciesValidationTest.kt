@@ -8,16 +8,18 @@
 package org.jetbrains.kotlin.gradle.unitTests
 
 import org.gradle.api.Project
+import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
 import org.jetbrains.kotlin.gradle.plugin.diagnostics.KotlinToolingDiagnostics.IncorrectCompileOnlyDependencyWarning
 import org.jetbrains.kotlin.gradle.plugin.diagnostics.kotlinToolingDiagnosticsCollector
 import org.jetbrains.kotlin.gradle.targets.js.dsl.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.util.*
+import org.jetbrains.kotlin.gradle.utils.prettyName
 import kotlin.test.Test
 
 @OptIn(ExperimentalWasmDsl::class)
 class MultiplatformIncorrectCompileOnlyDependenciesValidationTest {
 
-    private fun setupProject(configure: Project.() -> Unit): Project {
+    private fun setupKmpProject(configure: Project.() -> Unit): Project {
         val project = buildProjectWithMPP {
             kotlin {
                 jvm()
@@ -40,7 +42,7 @@ class MultiplatformIncorrectCompileOnlyDependenciesValidationTest {
 
     @Test
     fun `when compileOnly dependency is not defined anywhere, expect no warning`() {
-        val project = setupProject {}
+        val project = setupKmpProject {}
 
         project.runLifecycleAwareTest {
             val diagnostics = kotlinToolingDiagnosticsCollector.getDiagnosticsForProject(this)
@@ -56,7 +58,7 @@ class MultiplatformIncorrectCompileOnlyDependenciesValidationTest {
      */
     @Test
     fun `when compileOnly dependency is defined in commonTest, expect no warning`() {
-        val project = setupProject {
+        val project = setupKmpProject {
             kotlin {
                 sourceSets.apply {
                     commonTest {
@@ -76,8 +78,8 @@ class MultiplatformIncorrectCompileOnlyDependenciesValidationTest {
     }
 
     @Test
-    fun `when dependency is defined as compileOnly but not api, expect warnings`() {
-        val project = setupProject {
+    fun `when dependency is defined as compileOnly but not api, expect warning`() {
+        val project = setupKmpProject {
             kotlin {
                 sourceSets.apply {
                     commonMain {
@@ -93,52 +95,77 @@ class MultiplatformIncorrectCompileOnlyDependenciesValidationTest {
             val diagnostics = project.kotlinToolingDiagnosticsCollector
                 .getDiagnosticsForProject(project)
 
-            diagnostics.assertContainsSingleDiagnostic(IncorrectCompileOnlyDependencyWarning)
+            val actualWarning = diagnostics.assertContainsSingleDiagnostic(IncorrectCompileOnlyDependencyWarning)
 
-            val diag = diagnostics.first()
-            assertMatches(diag.message, compileOnlyDependencyWarningRegex)
+            assertContains(
+                expected = "A compileOnly dependency is used in targets: Kotlin/JS, Kotlin/Native, Kotlin/Wasm.",
+                actual = actualWarning.message,
+            )
+            // JVM is allowed to have compileOnly dependencies, so verify it's not listed in the warning
+            assertNotContains(
+                expected = KotlinPlatformType.jvm.prettyName,
+                actual = actualWarning.message,
+                ignoreCase = true,
+            )
+            assertContains(
+                expected = "- org.jetbrains.kotlinx:atomicfu:latest.release",
+                actual = actualWarning.message,
+            )
+            assertContains(
+                expected = "(source sets: jsMain, linuxX64Main, macosX64Main, mingwX64Main, wasmJsMain, wasmWasiMain)",
+                actual = actualWarning.message,
+            )
         }
-
-        // TODO more validation:
-//        diagnostics.assertDiagnostics(ToolingDiagnostic("x", "x", ToolingDiagnostic.Severity.ERROR))
-
-//            .runLifecycleAwareTest {
-//
-//            configurationResult.await()
-//            val diagnostics = kotlinToolingDiagnosticsCollector.getDiagnosticsForProject(this)
-
-//            diagnostics.assertNoDiagnostics("")
-
-//            build("help") {
-//                val warnings =
-//                    org.jetbrains.kotlin.gradle.unitTests.MultiplatformIncorrectCompileOnlyDependenciesValidationIT.compileOnlyDependencyWarningRegex.findAll(
-//                        output
-//                    )
-//                        .map {
-//                            val (platformName) = it.destructured
-//                            platformName
-//                        }
-//                        .distinct()
-//                        .toList()
-//                        .sorted()
-//
-//                assertContentEquals(
-//                    listOf(
-//                        "Kotlin/JS",
-//                        "Kotlin/Native",
-//                        "Kotlin/Wasm",
-//                    ),
-//                    warnings,
-//                    message = "expect warnings for compileOnly-incompatible platforms"
-//                )
-//            }
-//        }
     }
 
+    @Test
+    fun `when multiple dependencies are defined as compileOnly but not api, expect single warning, with aggregated dependencies`() {
+        val project = setupKmpProject {
+            kotlin {
+                sourceSets.apply {
+                    commonMain {
+                        dependencies {
+                            compileOnly("org.jetbrains.kotlinx:atomicfu:latest.release")
+                        }
+                    }
+                    nativeMain {
+                        dependencies {
+                            compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-json:latest.release")
+                        }
+                    }
+                    jsMain {
+                        dependencies {
+                            compileOnly("org.jetbrains.kotlinx:kotlinx-html:latest.release")
+                        }
+                    }
+                }
+            }
+        }
+
+        project.runLifecycleAwareTest {
+            val diagnostics = project.kotlinToolingDiagnosticsCollector
+                .getDiagnosticsForProject(project)
+
+            val actualWarning = diagnostics.assertContainsSingleDiagnostic(IncorrectCompileOnlyDependencyWarning)
+
+            assertContains(
+                expected = "- org.jetbrains.kotlinx:atomicfu:latest.release (source sets: jsMain, linuxX64Main, macosX64Main, mingwX64Main, wasmJsMain, wasmWasiMain)",
+                actual = actualWarning.message,
+            )
+            assertContains(
+                expected = "- org.jetbrains.kotlinx:kotlinx-html:latest.release (source sets: jsMain)",
+                actual = actualWarning.message,
+            )
+            assertContains(
+                expected = "- org.jetbrains.kotlinx:kotlinx-serialization-json:latest.release (source sets: linuxX64Main, macosX64Main, mingwX64Main)",
+                actual = actualWarning.message,
+            )
+        }
+    }
 
     @Test
     fun `when commonMain dependency is defined as compileOnly and api, expect no warning`() {
-        val project = setupProject {
+        val project = setupKmpProject {
             kotlin {
                 sourceSets.apply {
                     commonMain {
@@ -159,7 +186,7 @@ class MultiplatformIncorrectCompileOnlyDependenciesValidationTest {
 
     @Test
     fun `when dependency is defined as compileOnly in commonMain, and api in target main sources, expect no warning`() {
-        val project = setupProject {
+        val project = setupKmpProject {
             kotlin {
                 sourceSets.apply {
                     commonMain {
@@ -167,14 +194,17 @@ class MultiplatformIncorrectCompileOnlyDependenciesValidationTest {
                             compileOnly("org.jetbrains.kotlinx:atomicfu:latest.release")
                         }
                     }
-                    listOf(
+
+                    val allNativeTargets = listOf(
                         jvmMain,
                         jsMain,
                         nativeMain,
                         wasmJsMain,
                         wasmWasiMain,
-                    ).forEach {
-                        it.dependencies {
+                    )
+
+                    allNativeTargets.forEach { nativeTarget ->
+                        nativeTarget.dependencies {
                             api("org.jetbrains.kotlinx:atomicfu:latest.release")
                         }
                     }
@@ -191,7 +221,7 @@ class MultiplatformIncorrectCompileOnlyDependenciesValidationTest {
 
     @Test
     fun `when dependency is defined as compileOnly but not api, and kotlin-mpp warning is disabled, expect no warning`() {
-        val project = setupProject {
+        val project = setupKmpProject {
             kotlin {
                 sourceSets.apply {
                     commonMain {
@@ -212,8 +242,8 @@ class MultiplatformIncorrectCompileOnlyDependenciesValidationTest {
     }
 
     @Test
-    fun `when dependency is defined in nativeMain as compileOnly but not api, and kotlin-native warning is disabled, expect no warning for native compilations`() {
-        val project = setupProject {
+    fun `when dependency is defined in nativeMain as compileOnly but not api, and kotlin-native warning is disabled, expect no warning`() {
+        val project = setupKmpProject {
             kotlin {
                 sourceSets.apply {
                     nativeMain {
@@ -230,11 +260,5 @@ class MultiplatformIncorrectCompileOnlyDependenciesValidationTest {
             val diagnostics = kotlinToolingDiagnosticsCollector.getDiagnosticsForProject(this)
             diagnostics.assertNoDiagnostics(IncorrectCompileOnlyDependencyWarning)
         }
-    }
-
-    companion object {
-        private val compileOnlyDependencyWarningRegex = Regex(
-            "A compileOnly dependency is used in the (?<platformName>[^ ]*) target '[^']*':"
-        )
     }
 }

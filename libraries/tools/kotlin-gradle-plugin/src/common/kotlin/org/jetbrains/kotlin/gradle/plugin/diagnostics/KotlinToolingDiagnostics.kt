@@ -24,6 +24,7 @@ import org.jetbrains.kotlin.gradle.plugin.diagnostics.ToolingDiagnostic.Severity
 import org.jetbrains.kotlin.gradle.plugin.sources.android.multiplatformAndroidSourceSetLayoutV1
 import org.jetbrains.kotlin.gradle.plugin.sources.android.multiplatformAndroidSourceSetLayoutV2
 import org.jetbrains.kotlin.gradle.utils.prettyName
+import org.jetbrains.kotlin.utils.addToStdlib.flatGroupBy
 import java.io.File
 
 
@@ -758,31 +759,40 @@ object KotlinToolingDiagnostics {
 
     object IncorrectCompileOnlyDependencyWarning : ToolingDiagnosticFactory(WARNING) {
 
+        data class CompilationDependenciesPair(
+            val compilation: KotlinCompilation<*>,
+            val dependencyCoords: List<String>,
+        )
+
         operator fun invoke(
-            compilationsWithCompileOnlyDependencies: Map<KotlinCompilation<*>, List<String>>,
+            compilationsWithCompileOnlyDependencies: List<CompilationDependenciesPair>,
         ): ToolingDiagnostic {
 
-            val formattedPlatformNames = compilationsWithCompileOnlyDependencies.keys
-                .map { it.target.platformType.prettyName }
+            val formattedPlatformNames = compilationsWithCompileOnlyDependencies
+                .map { it.compilation.platformType.prettyName }
                 .distinct()
                 .sorted()
                 .joinToString()
+
             val formattedCompileOnlyDeps = compilationsWithCompileOnlyDependencies
-                .flatMap { (compilation, dependencies) ->
-                    dependencies.map { dependency -> "$dependency (compilation: ${compilation.name})" }
+                .flatGroupBy(
+                    keySelector = { it.dependencyCoords },
+                    keyTransformer = { it },
+                    valueTransformer = { it.compilation.defaultSourceSet.name },
+                )
+                .map { (dependency, sourceSetNames) ->
+                    "$dependency (source sets: ${sourceSetNames.joinToString()})"
                 }
                 .distinct()
                 .sorted()
                 .joinToString("\n") { "    - $it" }
 
             return build(/* language=text */ """
-                |A compileOnly dependency is used in targets: $formattedPlatformNames
+                |A compileOnly dependency is used in targets: $formattedPlatformNames.
                 |Dependencies:
                 |$formattedCompileOnlyDeps
                 |
-                |Using compileOnly dependencies in these targets is not currently supported.
-                |
-                |Kotlin Compilation requires compileOnly dependencies are required during the compilation of projects that depend on this project.
+                |Using compileOnly dependencies in these targets is not currently supported, because compileOnly dependencies must be present during the compilation of projects that depend on this project.
                 |
                 |To ensure consistent compilation behaviour, compileOnly dependencies should be exposed as api dependencies.
                 |
@@ -800,7 +810,7 @@ object KotlinToolingDiagnostics {
                 |        }
                 |    }
                 |
-                |This warning can be suppressed in by adding the property in gradle.properties:
+                |This warning can be suppressed in gradle.properties:
                 |
                 |    ${KOTLIN_SUPPRESS_GRADLE_PLUGIN_WARNINGS_PROPERTY}=${id}
                 |
@@ -815,6 +825,7 @@ object KotlinToolingDiagnostics {
     }
 
     private val resourcesBugReportRequest get() = "This is likely a bug in Kotlin Gradle Plugin configuration. Please report this issue to https://kotl.in/issue."
+
     object ResourcePublishedMoreThanOncePerTarget : ToolingDiagnosticFactory(ERROR) {
         operator fun invoke(targetName: String) = build(
             """
@@ -930,8 +941,10 @@ object KotlinToolingDiagnostics {
 
     object WasmStabilityWarning : ToolingDiagnosticFactory(WARNING) {
         operator fun invoke(): ToolingDiagnostic =
-            build("New 'wasm' target is Work-in-Progress and is subject to change without notice. " +
-                        "Please report encountered issues to https://kotl.in/issue")
+            build(
+                "New 'wasm' target is Work-in-Progress and is subject to change without notice. " +
+                        "Please report encountered issues to https://kotl.in/issue"
+            )
     }
 }
 

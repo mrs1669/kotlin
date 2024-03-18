@@ -7,6 +7,7 @@ package org.jetbrains.kotlin.gradle.plugin.diagnostics.checkers
 import org.gradle.api.artifacts.Dependency
 import org.jetbrains.kotlin.gradle.plugin.*
 import org.jetbrains.kotlin.gradle.plugin.diagnostics.*
+import org.jetbrains.kotlin.gradle.plugin.diagnostics.KotlinToolingDiagnostics.IncorrectCompileOnlyDependencyWarning.CompilationDependenciesPair
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinMetadataCompilation
 
 internal object IncorrectCompileOnlyDependenciesChecker : KotlinGradleProjectChecker {
@@ -17,12 +18,9 @@ internal object IncorrectCompileOnlyDependenciesChecker : KotlinGradleProjectChe
         val multiplatform = multiplatformExtension ?: return
 
         val compilationsWithCompileOnlyDependencies = multiplatform.targets
-            .filter { target -> !isAllowedCompileOnlyDependencies(target.platformType) }
             .flatMap { target -> compileOnlyDependencies(target) }
-            .groupingBy { it.first }
-            .fold(listOf<String>()) { acc, (_, dependencies) -> acc + dependencies }
 
-        if (compilationsWithCompileOnlyDependencies.values.any { it.isNotEmpty() }) {
+        if (compilationsWithCompileOnlyDependencies.any { it.dependencyCoords.isNotEmpty() }) {
             project.reportDiagnostic(
                 KotlinToolingDiagnostics.IncorrectCompileOnlyDependencyWarning(
                     compilationsWithCompileOnlyDependencies = compilationsWithCompileOnlyDependencies,
@@ -31,45 +29,34 @@ internal object IncorrectCompileOnlyDependenciesChecker : KotlinGradleProjectChe
         }
     }
 
-    private fun KotlinGradleProjectCheckerContext.isAllowedCompileOnlyDependencies(target: KotlinPlatformType): Boolean {
-        return when (target) {
-            KotlinPlatformType.jvm,
-            KotlinPlatformType.androidJvm,
-            -> true
-
-            KotlinPlatformType.common,
-            KotlinPlatformType.wasm,
-            KotlinPlatformType.js,
-            -> false
-
-            KotlinPlatformType.native -> {
-                @Suppress("DEPRECATION")
-                PropertiesProvider(project).ignoreIncorrectNativeDependencies != true
-            }
-        }
-    }
-
     /**
-     * Extract all [target] dependencies that satisfy:
-     * 1. defined as compileOnly
-     * 2. are not also exposed as api elements.
+     * Extract all dependencies of [target], satisfying:
+     * 1. they are `compileOnly`
+     * 2. they are not exposed as api elements.
      */
     private fun KotlinGradleProjectCheckerContext.compileOnlyDependencies(
         target: KotlinTarget,
-    ): List<Pair<KotlinCompilation<*>, List<String>>> {
+    ): List<CompilationDependenciesPair> {
         val apiElementsDependencies = project.configurations.getByName(target.apiElementsConfigurationName).allDependencies
 
         fun Dependency.isInApiElements(): Boolean =
             apiElementsDependencies.any { it.contentEquals(this) }
 
-        return target.compilations
+        val filteredCompilations = target.compilations
             .filter { it.isPublished() }
-            .map { compilation ->
-                val compileOnlyDependencies = project.configurations.getByName(compilation.compileOnlyConfigurationName).allDependencies
-                val nonApiCompileOnlyDependencies = compileOnlyDependencies.filter { !it.isInApiElements() }
+            .filter { !isAllowedCompileOnlyDependencies(it.target.platformType) }
 
-                compilation to nonApiCompileOnlyDependencies.map { it.stringCoordinates() }
-            }
+        return filteredCompilations.map { compilation ->
+            val compileOnlyDependencies = project.configurations
+                .getByName(compilation.compileOnlyConfigurationName)
+                .allDependencies
+            val nonApiCompileOnlyDependencies = compileOnlyDependencies.filter { !it.isInApiElements() }
+
+            CompilationDependenciesPair(
+                compilation,
+                nonApiCompileOnlyDependencies.map { it.stringCoordinates() },
+            )
+        }
     }
 
     /**
@@ -79,6 +66,31 @@ internal object IncorrectCompileOnlyDependenciesChecker : KotlinGradleProjectChe
         return when (this) {
             is KotlinMetadataCompilation<*> -> true
             else -> name == KotlinCompilation.MAIN_COMPILATION_NAME
+        }
+    }
+
+    private fun KotlinGradleProjectCheckerContext.isAllowedCompileOnlyDependencies(target: KotlinPlatformType): Boolean {
+        return when (target) {
+            KotlinPlatformType.jvm,
+            KotlinPlatformType.androidJvm,
+            -> true
+
+            // Technically, compileOnly dependencies should also be forbidden for
+            // common compilations, but in practice such dependencies will
+            // filtered down to the actual target-specific compilations.
+            // Therefore, to avoid duplicated warning messages for dependencies
+            // in commonMain and a ${target}Main, don't check common targets.
+            KotlinPlatformType.common,
+            -> true
+
+            KotlinPlatformType.wasm,
+            KotlinPlatformType.js,
+            -> false
+
+            KotlinPlatformType.native -> {
+                @Suppress("DEPRECATION")
+                PropertiesProvider(project).ignoreIncorrectNativeDependencies == true
+            }
         }
     }
 

@@ -137,11 +137,18 @@ internal fun Collection<ToolingDiagnostic>.assertNoDiagnostics(factory: ToolingD
     assertNoDiagnostics(factory.id)
 }
 
-internal fun Collection<ToolingDiagnostic>.assertContainsSingleDiagnostic(factory: ToolingDiagnosticFactory) {
-    val actualDiagnostics = filter { it.id == factory.id }
-    if (actualDiagnostics.size != 1) {
-        fail("Expected to have 1 diagnostic with id '${factory.id}', but ${actualDiagnostics.size} were reported:\n${actualDiagnostics.render()}")
+/**
+ * Asserts that [this] contains a single diagnostic that matches [factory]'s ID.
+ * @returns the [ToolingDiagnostic] with the same ID as [factory].
+ */
+internal fun Collection<ToolingDiagnostic>.assertContainsSingleDiagnostic(
+    factory: ToolingDiagnosticFactory,
+): ToolingDiagnostic {
+    val matches = filter { it.id == factory.id }
+    if (matches.size != 1) {
+        fail("Expected to have 1 diagnostic with id '${factory.id}', but ${matches.size} were reported:\n${matches.render()}")
     }
+    return matches.single()
 }
 
 private fun Collection<ToolingDiagnostic>.render(): String = joinToString(separator = "\n----\n")
