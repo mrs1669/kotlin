@@ -17,7 +17,8 @@ internal object GradleDeprecatedPropertyChecker : KotlinGradleProjectChecker {
         "kotlin.experimental.tryK2",
         "kapt.use.k2",
         "kotlin.internal.single.build.metrics.file",
-        "kotlin.build.report.dir"
+        "kotlin.build.report.dir",
+        "kotlin.native.ignoreIncorrectDependencies",
     )
 
     override suspend fun KotlinGradleProjectCheckerContext.runChecks(collector: KotlinToolingDiagnosticsCollector) {
@@ -33,5 +34,4 @@ internal object GradleDeprecatedPropertyChecker : KotlinGradleProjectChecker {
             )
         }
     }
-
 }

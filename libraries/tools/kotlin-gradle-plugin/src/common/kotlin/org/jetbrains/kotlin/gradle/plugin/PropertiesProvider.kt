@@ -243,7 +243,6 @@ internal class PropertiesProvider private constructor(private val project: Proje
     val ignoreDisabledCInteropCommonization: Boolean
         get() = booleanProperty("$KOTLIN_MPP_ENABLE_CINTEROP_COMMONIZATION.nowarn") ?: false
 
-    // TODO how to print deprecation warning when property is defined in gradle.properties?
     @Deprecated("Please set \"$KOTLIN_SUPPRESS_GRADLE_PLUGIN_WARNINGS_PROPERTY=${INCORRECT_COMPILE_ONLY_DEPENDENCY_WARNING_ID}\" in gradle.properties instead")
     val ignoreIncorrectNativeDependencies: Boolean?
         get() = booleanProperty("kotlin.native.ignoreIncorrectDependencies")

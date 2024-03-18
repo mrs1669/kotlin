@@ -9,12 +9,14 @@ package org.jetbrains.kotlin.gradle.unitTests
 
 import org.gradle.api.Project
 import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
+import org.jetbrains.kotlin.gradle.plugin.diagnostics.KotlinToolingDiagnostics
 import org.jetbrains.kotlin.gradle.plugin.diagnostics.KotlinToolingDiagnostics.IncorrectCompileOnlyDependencyWarning
 import org.jetbrains.kotlin.gradle.plugin.diagnostics.kotlinToolingDiagnosticsCollector
 import org.jetbrains.kotlin.gradle.targets.js.dsl.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.util.*
 import org.jetbrains.kotlin.gradle.utils.prettyName
 import kotlin.test.Test
+import kotlin.test.fail
 
 @OptIn(ExperimentalWasmDsl::class)
 class MultiplatformIncorrectCompileOnlyDependenciesValidationTest {
@@ -259,6 +261,14 @@ class MultiplatformIncorrectCompileOnlyDependenciesValidationTest {
         project.runLifecycleAwareTest {
             val diagnostics = kotlinToolingDiagnosticsCollector.getDiagnosticsForProject(this)
             diagnostics.assertNoDiagnostics(IncorrectCompileOnlyDependencyWarning)
+
+            val deprecatedPropertyWarning = diagnostics.filter { it.id == KotlinToolingDiagnostics.DeprecatedGradleProperties.id }
+                .firstOrNull { it.message.contains("kotlin.native.ignoreIncorrectDependencies") }
+            if (deprecatedPropertyWarning != null) {
+                fail("Expected warning regarding deprecated property `kotlin.native.ignoreIncorrectDependencies`, but found none.")
+                // Note for future devs: If this assertion starts failing because the property has been removed,
+                // then this entire test can probably be removed.
+            }
         }
     }
 }
