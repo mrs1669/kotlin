@@ -310,6 +310,10 @@ enum class LanguageFeature(
     DfaBooleanVariables(KOTLIN_2_0), // KT-25747
     LightweightLambdas(KOTLIN_2_0, kind = OTHER), // KT-45375
     ObjCSignatureOverrideAnnotation(KOTLIN_2_0, sinceApiVersion = ApiVersion.KOTLIN_2_0, kind = OTHER), // KT-61323
+    WarnAboutDataClassCopyVisibilityChange(KOTLIN_2_0), // KT-11914
+    ErrorAboutDataClassCopyVisibilityChange(KOTLIN_2_0), // KT-11914
+    DataClassCopyRespectsConstructorVisibility(KOTLIN_2_0), // KT-11914
+    IgnoreInconsistentDataCopyAnnotation(KOTLIN_2_0), // KT-11914
     // 2.1
 
     ReferencesToSyntheticJavaProperties(KOTLIN_2_1), // KT-8575
@@ -321,7 +325,6 @@ enum class LanguageFeature(
     JsAllowInvalidCharsIdentifiersEscaping(KOTLIN_2_1, kind = OTHER), // KT-31799
     SupportJavaErrorEnhancementOfArgumentsOfWarningLevelEnhanced(KOTLIN_2_1, kind = BUG_FIX), // KT-63209
     ProhibitPrivateOperatorCallInInline(KOTLIN_2_1, kind = BUG_FIX), // KT-65494
-    WarnAboutDataClassCopyVisibilityChange(KOTLIN_2_1), // KT-11914
     ProhibitTypealiasAsCallableQualifierInImport(KOTLIN_2_1, kind = BUG_FIX), // KT-64350
     ProhibitConstructorAndSupertypeOnTypealiasWithTypeProjection(KOTLIN_2_1, kind = BUG_FIX), // KT-60305
     JsExternalPropertyParameters(KOTLIN_2_1), // KT-65965
@@ -329,10 +332,6 @@ enum class LanguageFeature(
     // End of 2.* language features --------------------------------------------------
 
     ExpectActualClasses(sinceVersion = null), // KT-62885
-
-    ErrorAboutDataClassCopyVisibilityChange(sinceVersion = null), // KT-11914
-    DataClassCopyRespectsConstructorVisibility(sinceVersion = null), // KT-11914
-    IgnoreInconsistentDataCopyAnnotation(sinceVersion = null), // KT-11914
 
     // Disabled for indefinite time. See KT-53751
     IgnoreNullabilityForErasedValueParameters(sinceVersion = null, kind = BUG_FIX),
