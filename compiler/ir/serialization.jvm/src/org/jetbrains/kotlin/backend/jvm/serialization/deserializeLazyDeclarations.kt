@@ -83,7 +83,7 @@ fun deserializeFromByteArray(
         symbolDeserializer,
         onDeserializedClass = { _, _ -> },
         needToConstructFakeOverrides = { true },
-        partialLinkageEnabled = false,
+        specialProcessingForMismatchedSymbolKind = null,
         irInterner = irInterner
     )
     for (declarationProto in irProto.declarationList) {
