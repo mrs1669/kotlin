@@ -170,9 +170,15 @@ import org.jetbrains.kotlin.fir.analysis.diagnostics.FirErrors.CYCLIC_CONSTRUCTO
 import org.jetbrains.kotlin.fir.analysis.diagnostics.FirErrors.CYCLIC_GENERIC_UPPER_BOUND
 import org.jetbrains.kotlin.fir.analysis.diagnostics.FirErrors.CYCLIC_INHERITANCE_HIERARCHY
 import org.jetbrains.kotlin.fir.analysis.diagnostics.FirErrors.DANGEROUS_CHARACTERS
+import org.jetbrains.kotlin.fir.analysis.diagnostics.FirErrors.DATA_CLASS_COPY_USAGE_WILL_BECOME_INACCESSIBLE_ERROR
+import org.jetbrains.kotlin.fir.analysis.diagnostics.FirErrors.DATA_CLASS_COPY_USAGE_WILL_BECOME_INACCESSIBLE_WARNING
+import org.jetbrains.kotlin.fir.analysis.diagnostics.FirErrors.DATA_CLASS_COPY_VISIBILITY_WILL_BE_CHANGED_ERROR
+import org.jetbrains.kotlin.fir.analysis.diagnostics.FirErrors.DATA_CLASS_COPY_VISIBILITY_WILL_BE_CHANGED_WARNING
 import org.jetbrains.kotlin.fir.analysis.diagnostics.FirErrors.DATA_CLASS_NOT_PROPERTY_PARAMETER
 import org.jetbrains.kotlin.fir.analysis.diagnostics.FirErrors.DATA_CLASS_OVERRIDE_CONFLICT
 import org.jetbrains.kotlin.fir.analysis.diagnostics.FirErrors.DATA_CLASS_OVERRIDE_DEFAULT_VALUES
+import org.jetbrains.kotlin.fir.analysis.diagnostics.FirErrors.DATA_CLASS_CONSISTENT_COPY_AND_INCONSISTENT_COPY_ARE_INCOMPATIBLE_ANNOTATIONS
+import org.jetbrains.kotlin.fir.analysis.diagnostics.FirErrors.DATA_CLASS_CONSISTENT_COPY_WRONG_ANNOTATION_TARGET
 import org.jetbrains.kotlin.fir.analysis.diagnostics.FirErrors.DATA_CLASS_VARARG_PARAMETER
 import org.jetbrains.kotlin.fir.analysis.diagnostics.FirErrors.DATA_CLASS_WITHOUT_PARAMETERS
 import org.jetbrains.kotlin.fir.analysis.diagnostics.FirErrors.DATA_OBJECT_CUSTOM_EQUALS_OR_HASH_CODE
@@ -545,6 +551,7 @@ import org.jetbrains.kotlin.fir.analysis.diagnostics.FirErrors.RECURSION_IN_IMPL
 import org.jetbrains.kotlin.fir.analysis.diagnostics.FirErrors.RECURSION_IN_INLINE
 import org.jetbrains.kotlin.fir.analysis.diagnostics.FirErrors.RECURSIVE_TYPEALIAS_EXPANSION
 import org.jetbrains.kotlin.fir.analysis.diagnostics.FirErrors.REDECLARATION
+import org.jetbrains.kotlin.fir.analysis.diagnostics.FirErrors.REDUNDANT_ANNOTATION
 import org.jetbrains.kotlin.fir.analysis.diagnostics.FirErrors.REDUNDANT_ANNOTATION_TARGET
 import org.jetbrains.kotlin.fir.analysis.diagnostics.FirErrors.REDUNDANT_CALL_OF_CONVERSION_METHOD
 import org.jetbrains.kotlin.fir.analysis.diagnostics.FirErrors.REDUNDANT_EXPLICIT_BACKING_FIELD
@@ -981,6 +988,52 @@ object FirErrorsDefaultMessages : BaseDiagnosticRendererFactory() {
             "Explicit 'this' or 'super' call is required. There is no constructor in the superclass that can be called without arguments."
         )
         map.put(SEALED_CLASS_CONSTRUCTOR_CALL, "Sealed types cannot be instantiated.")
+        map.put(
+            DATA_CLASS_COPY_VISIBILITY_WILL_BE_CHANGED_WARNING,
+            """
+                Private primary constructor is exposed via the generated 'copy()' method of a 'data' class.
+
+                The generated 'copy()' will change it's visibility in future releases.
+
+                To suppress the warning do one of the following:
+                - Annotate the data class with '@ConsistentDataCopy' annotation. See more in the annotation KDoc.
+                - Add '-Xsafe-data-class-copy-visibility' compiler option
+                - Annotate the data class with '@InconsistentDataCopy' annotation (Discouraged, but useful if you want to keep binary compatibility).
+                  See more in the annotation KDoc.
+
+                This warning will become an error in future releases.
+            """.trimIndent()
+        )
+        map.put(
+            DATA_CLASS_COPY_VISIBILITY_WILL_BE_CHANGED_ERROR,
+            """
+                Private primary constructor is exposed via the generated 'copy()' method of a 'data' class.
+
+                The generated 'copy()' will change it's visibility in future releases.
+
+                To suppress the error do one of the following:
+                - Annotate the data class with '@ConsistentDataCopy' annotation. See more in the annotation KDoc.
+                - Add '-Xsafe-data-class-copy-visibility' compiler option
+                - Annotate the data class with '@InconsistentDataCopy' annotation (Discouraged, but useful if you want to keep binary compatibility).
+                  See more in the annotation KDoc.
+            """.trimIndent()
+        )
+        map.put(
+            DATA_CLASS_COPY_USAGE_WILL_BECOME_INACCESSIBLE_WARNING,
+            "This 'copy()' exposes 'data class' private primary constructor. Please migrate the usage. This warning will become an error in future versions of Kotlin"
+        )
+        map.put(
+            DATA_CLASS_COPY_USAGE_WILL_BECOME_INACCESSIBLE_ERROR,
+            "This 'copy()' exposes 'data class' private primary constructor. Please migrate the usage."
+        )
+        map.put(
+            DATA_CLASS_CONSISTENT_COPY_AND_INCONSISTENT_COPY_ARE_INCOMPATIBLE_ANNOTATIONS,
+            "'@ConsistentDataCopy' and '@InconsistentDataCopy' are incompatible"
+        )
+        map.put(
+            DATA_CLASS_CONSISTENT_COPY_WRONG_ANNOTATION_TARGET,
+            "'@ConsistentDataCopy' and '@InconsistentDataCopy' can only be applied to data classes"
+        )
         map.put(DATA_CLASS_WITHOUT_PARAMETERS, "Data class must have at least one primary constructor parameter.")
         map.put(DATA_CLASS_VARARG_PARAMETER, "Primary constructor vararg parameters are prohibited for data classes.")
         map.put(DATA_CLASS_NOT_PROPERTY_PARAMETER, "Primary constructor of data class must only have property ('val' / 'var') parameters.")
@@ -1039,6 +1092,7 @@ object FirErrorsDefaultMessages : BaseDiagnosticRendererFactory() {
             EMPTY,
             EMPTY
         )
+        map.put(REDUNDANT_ANNOTATION, "Annotation ''{0}'' is redundant", TO_STRING)
         map.put(ANNOTATION_ON_SUPERCLASS, "Annotations on superclasses are meaningless.")
         map.put(RESTRICTED_RETENTION_FOR_EXPRESSION_ANNOTATION, "Expression annotations with retention other than SOURCE are prohibited.")
         map.put(WRONG_ANNOTATION_TARGET, "This annotation is not applicable to target ''{0}''.", TO_STRING)
