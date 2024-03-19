@@ -74,8 +74,6 @@ fun deserializeFromByteArray(
 
     val lazyIrFactory = LazyIrFactory(irBuiltIns.irFactory)
 
-    val fakeOverrideBuilder = makeSimpleFakeOverrideBuilder(symbolTable, typeSystemContext, symbolDeserializer)
-
     // We have to supply topLevelParent here, but this results in wrong values for parent fields in deeply embedded declarations.
     // Patching will be needed.
     val deserializer = IrDeclarationDeserializer(
@@ -85,8 +83,7 @@ fun deserializeFromByteArray(
         deserializeBodies = true,
         symbolDeserializer,
         DefaultFakeOverrideClassFilter,
-        fakeOverrideBuilder,
-        compatibilityMode = CompatibilityMode.CURRENT,
+        onDeserializedClass = { _, _ -> },
         partialLinkageEnabled = false,
         internationService = internationService
     )
