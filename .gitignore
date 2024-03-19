@@ -59,3 +59,5 @@ outTmp/
 kotlin-ide/
 .kotlin/
 .teamcity/
+# GitHub Copilot persisted chat sessions
+**/copilot/chatSessions
