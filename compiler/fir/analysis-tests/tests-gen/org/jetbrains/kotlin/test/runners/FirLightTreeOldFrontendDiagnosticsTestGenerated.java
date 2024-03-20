@@ -8141,6 +8141,12 @@ public class FirLightTreeOldFrontendDiagnosticsTestGenerated extends AbstractFir
       }
 
       @Test
+      @TestMetadata("reassignmentInConcurrentLambdas.kt")
+      public void testReassignmentInConcurrentLambdas() {
+        runTest("compiler/testData/diagnostics/tests/controlFlowAnalysis/reassignmentInConcurrentLambdas.kt");
+      }
+
+      @Test
       @TestMetadata("reassignmentInLambda.kt")
       public void testReassignmentInLambda() {
         runTest("compiler/testData/diagnostics/tests/controlFlowAnalysis/reassignmentInLambda.kt");
@@ -11651,6 +11657,12 @@ public class FirLightTreeOldFrontendDiagnosticsTestGenerated extends AbstractFir
       }
 
       @Test
+      @TestMetadata("hiddenComponentInDestructuringDeclaration.kt")
+      public void testHiddenComponentInDestructuringDeclaration() {
+        runTest("compiler/testData/diagnostics/tests/deprecated/hiddenComponentInDestructuringDeclaration.kt");
+      }
+
+      @Test
       @TestMetadata("hiddenPropertyAccessors.kt")
       public void testHiddenPropertyAccessors() {
         runTest("compiler/testData/diagnostics/tests/deprecated/hiddenPropertyAccessors.kt");
@@ -11678,6 +11690,12 @@ public class FirLightTreeOldFrontendDiagnosticsTestGenerated extends AbstractFir
       @TestMetadata("javaDeprecated.kt")
       public void testJavaDeprecated() {
         runTest("compiler/testData/diagnostics/tests/deprecated/javaDeprecated.kt");
+      }
+
+      @Test
+      @TestMetadata("javaDeprecatedHidden.kt")
+      public void testJavaDeprecatedHidden() {
+        runTest("compiler/testData/diagnostics/tests/deprecated/javaDeprecatedHidden.kt");
       }
 
       @Test
@@ -21955,6 +21973,12 @@ public class FirLightTreeOldFrontendDiagnosticsTestGenerated extends AbstractFir
       }
 
       @Test
+      @TestMetadata("jkjPrivateProperty.kt")
+      public void testJkjPrivateProperty() {
+        runTest("compiler/testData/diagnostics/tests/j+k/jkjPrivateProperty.kt");
+      }
+
+      @Test
       @TestMetadata("KJKInheritance.kt")
       public void testKJKInheritance() {
         runTest("compiler/testData/diagnostics/tests/j+k/KJKInheritance.kt");
@@ -24385,6 +24409,12 @@ public class FirLightTreeOldFrontendDiagnosticsTestGenerated extends AbstractFir
       }
 
       @Test
+      @TestMetadata("BoxedInaccessibleGenericTypeUsedByDependencies.kt")
+      public void testBoxedInaccessibleGenericTypeUsedByDependencies() {
+        runTest("compiler/testData/diagnostics/tests/multimodule/BoxedInaccessibleGenericTypeUsedByDependencies.kt");
+      }
+
+      @Test
       @TestMetadata("dependencyModule.kt")
       public void testDependencyModule() {
         runTest("compiler/testData/diagnostics/tests/multimodule/dependencyModule.kt");
@@ -25820,6 +25850,12 @@ public class FirLightTreeOldFrontendDiagnosticsTestGenerated extends AbstractFir
       @TestMetadata("implicitInvokeOnPropertyInItsInitializer.kt")
       public void testImplicitInvokeOnPropertyInItsInitializer() {
         runTest("compiler/testData/diagnostics/tests/operatorsOverloading/implicitInvokeOnPropertyInItsInitializer.kt");
+      }
+
+      @Test
+      @TestMetadata("implicitInvokeOnPropertyInItsInitializer2.kt")
+      public void testImplicitInvokeOnPropertyInItsInitializer2() {
+        runTest("compiler/testData/diagnostics/tests/operatorsOverloading/implicitInvokeOnPropertyInItsInitializer2.kt");
       }
 
       @Test
@@ -29646,6 +29682,12 @@ public class FirLightTreeOldFrontendDiagnosticsTestGenerated extends AbstractFir
     @TestDataPath("$PROJECT_ROOT")
     public class Resolve {
       @Test
+      @TestMetadata("accessOnComplexProjectedReceiver.kt")
+      public void testAccessOnComplexProjectedReceiver() {
+        runTest("compiler/testData/diagnostics/tests/resolve/accessOnComplexProjectedReceiver.kt");
+      }
+
+      @Test
       public void testAllFilesPresentInResolve() {
         KtTestUtil.assertAllTestsPresentByMetadataWithExcluded(this.getClass(), new File("compiler/testData/diagnostics/tests/resolve"), Pattern.compile("^(.+)\\.kt$"), Pattern.compile("^(.+)\\.(reversed|fir|ll)\\.kts?$"), true, "multiplatform");
       }
@@ -33345,6 +33387,12 @@ public class FirLightTreeOldFrontendDiagnosticsTestGenerated extends AbstractFir
       }
 
       @Test
+      @TestMetadata("smartcastToAliasedFunctionalType.kt")
+      public void testSmartcastToAliasedFunctionalType() {
+        runTest("compiler/testData/diagnostics/tests/smartCasts/smartcastToAliasedFunctionalType.kt");
+      }
+
+      @Test
       @TestMetadata("smartcastToInvisibleType_java.kt")
       public void testSmartcastToInvisibleType_java() {
         runTest("compiler/testData/diagnostics/tests/smartCasts/smartcastToInvisibleType_java.kt");
@@ -36470,6 +36518,12 @@ public class FirLightTreeOldFrontendDiagnosticsTestGenerated extends AbstractFir
       @Test
       public void testAllFilesPresentInTestsWithJava21() {
         KtTestUtil.assertAllTestsPresentByMetadataWithExcluded(this.getClass(), new File("compiler/testData/diagnostics/tests/testsWithJava21"), Pattern.compile("^(.+)\\.kt$"), Pattern.compile("^(.+)\\.(reversed|fir|ll)\\.kts?$"), true, "multiplatform");
+      }
+
+      @Test
+      @TestMetadata("hiddenInDeclaringMethods.kt")
+      public void testHiddenInDeclaringMethods() {
+        runTest("compiler/testData/diagnostics/tests/testsWithJava21/hiddenInDeclaringMethods.kt");
       }
 
       @Test
