@@ -42,11 +42,11 @@ internal object IncorrectCompileOnlyDependenciesChecker : KotlinGradleProjectChe
         fun Dependency.isInApiElements(): Boolean =
             apiElementsDependencies.any { it.contentEquals(this) }
 
-        val filteredCompilations = target.compilations
+        val compilationsIncompatibleWithCompileOnly = target.compilations
             .filter { it.isPublished() }
             .filter { !isAllowedCompileOnlyDependencies(it.target.platformType) }
 
-        return filteredCompilations.map { compilation ->
+        return compilationsIncompatibleWithCompileOnly.map { compilation ->
             val compileOnlyDependencies = project.configurations
                 .getByName(compilation.compileOnlyConfigurationName)
                 .allDependencies
