@@ -23,8 +23,7 @@ import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.inline.FunctionInlining
 import org.jetbrains.kotlin.ir.interpreter.IrInterpreterConfiguration
 import org.jetbrains.kotlin.ir.util.patchDeclarationParents
-import org.jetbrains.kotlin.platform.WasmPlatform
-import org.jetbrains.kotlin.platform.toTargetPlatform
+import org.jetbrains.kotlin.platform.wasm.WasmPlatforms
 
 private fun List<CompilerPhase<WasmBackendContext, IrModuleFragment, IrModuleFragment>>.toCompilerPhase() =
     reduce { acc, lowering -> acc.then(lowering) }
@@ -624,7 +623,7 @@ val constEvaluationPhase = makeIrModulePhase(
     { context ->
         val configuration = IrInterpreterConfiguration(
             printOnlyExceptionMessage = true,
-            platform = WasmPlatform.toTargetPlatform(),
+            platform = WasmPlatforms.unspecifiedWasmPlatform,
         )
         ConstEvaluationLowering(context, configuration = configuration)
     },
