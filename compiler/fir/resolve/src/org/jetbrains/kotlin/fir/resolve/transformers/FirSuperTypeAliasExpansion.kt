@@ -41,7 +41,7 @@ class FirSuperTypeAliasTransformer(
     }
 
     override fun transformClass(klass: FirClass, data: Any?): FirStatement {
-        val fullyExpandedSupertypes = klass.superTypeRefs.map(::expandTypealiasInPlace)
+        val fullyExpandedSupertypes = klass.superTypeRefs.map { expandTypealiasInPlace(it, session) }
         klass.replaceSuperTypeRefs(fullyExpandedSupertypes)
         return transformDeclarationContent(klass, data)
     }
@@ -55,17 +55,19 @@ class FirSuperTypeAliasTransformer(
     }
 
     override fun transformTypeAlias(typeAlias: FirTypeAlias, data: Any?): FirStatement {
-        val fullyExpandedType = typeAlias.expandedTypeRef.let(::expandTypealiasInPlace)
+        val fullyExpandedType = expandTypealiasInPlace(typeAlias.expandedTypeRef, session)
         typeAlias.replaceExpandedTypeRef(fullyExpandedType)
         return typeAlias
     }
 
-    private fun expandTypealiasInPlace(typeRef: FirTypeRef): FirTypeRef {
-        return when (typeRef) {
-            is FirImplicitBuiltinTypeRef, is FirErrorTypeRef -> typeRef
-            else -> when (val expanded = typeRef.coneType.fullyExpandedType(session)) {
-                typeRef.coneType -> typeRef
-                else -> expanded.assign(AbbreviatedTypeAttribute(typeRef.coneType)).let(typeRef::withReplacedConeType)
+    companion object {
+        fun expandTypealiasInPlace(typeRef: FirTypeRef, session: FirSession): FirTypeRef {
+            return when (typeRef) {
+                is FirImplicitBuiltinTypeRef, is FirErrorTypeRef -> typeRef
+                else -> when (val expanded = typeRef.coneType.fullyExpandedType(session)) {
+                    typeRef.coneType -> typeRef
+                    else -> expanded.assign(AbbreviatedTypeAttribute(typeRef.coneType)).let(typeRef::withReplacedConeType)
+                }
             }
         }
     }

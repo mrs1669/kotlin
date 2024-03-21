@@ -16,6 +16,7 @@ internal object LLFirLazyPhaseResolverByPhase {
         this[FirResolvePhase.COMPILER_REQUIRED_ANNOTATIONS] = LLFirCompilerAnnotationsLazyResolver
         this[FirResolvePhase.COMPANION_GENERATION] = LLFirGeneratedCompanionObjectLazyResolver
         this[FirResolvePhase.SUPER_TYPES] = LLFirSupertypeLazyResolver
+        this[FirResolvePhase.SUPER_TYPE_ALIASES] = LLFirSuperTypeAliasLazyResolver
         this[FirResolvePhase.SEALED_CLASS_INHERITORS] = LLFirSealedClassInheritorsLazyResolver
         this[FirResolvePhase.TYPES] = LLFirTypeLazyResolver
         this[FirResolvePhase.STATUS] = LLFirStatusLazyResolver

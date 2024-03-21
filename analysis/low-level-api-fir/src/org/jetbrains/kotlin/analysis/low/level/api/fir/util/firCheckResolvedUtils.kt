@@ -11,6 +11,7 @@ import org.jetbrains.kotlin.analysis.low.level.api.fir.lazy.resolve.NonLocalAnno
 import org.jetbrains.kotlin.fir.FirAnnotationContainer
 import org.jetbrains.kotlin.fir.FirElement
 import org.jetbrains.kotlin.fir.FirElementWithResolveState
+import org.jetbrains.kotlin.fir.FirSession
 import org.jetbrains.kotlin.fir.contracts.FirLegacyRawContractDescription
 import org.jetbrains.kotlin.fir.contracts.FirResolvedContractDescription
 import org.jetbrains.kotlin.fir.declarations.*
@@ -23,6 +24,7 @@ import org.jetbrains.kotlin.fir.expressions.impl.FirResolvedArgumentList
 import org.jetbrains.kotlin.fir.references.*
 import org.jetbrains.kotlin.fir.resolve.transformers.body.resolve.FirAbstractBodyResolveTransformerDispatcher
 import org.jetbrains.kotlin.fir.symbols.FirBasedSymbol
+import org.jetbrains.kotlin.fir.symbols.impl.FirTypeAliasSymbol
 import org.jetbrains.kotlin.fir.types.*
 import org.jetbrains.kotlin.fir.utils.exceptions.withFirEntry
 import org.jetbrains.kotlin.fir.utils.exceptions.withFirSymbolEntry
@@ -46,6 +48,27 @@ internal inline fun checkTypeRefIsResolved(
                     append(" or ${FirImplicitTypeRef::class.simpleName}")
                 }
                 append(" for $typeRefName of ${owner::class.simpleName}(${(owner as? FirDeclaration)?.origin}) but ${typeRef::class.simpleName} found")
+            }
+        }
+    ) {
+        withFirEntry("typeRef", typeRef)
+        withFirEntry("firDeclaration", owner)
+        extraAttachment()
+    }
+}
+
+internal inline fun checkTypeRefIsFullyExpanded(
+    typeRef: FirTypeRef,
+    typeRefName: String,
+    session: FirSession,
+    owner: FirElementWithResolveState,
+    extraAttachment: ExceptionAttachmentBuilder.() -> Unit = {},
+) {
+    checkWithAttachment(
+        condition = typeRef.coneTypeSafe<ConeClassLikeType>()?.toSymbol(session) is FirTypeAliasSymbol,
+        message = {
+            buildString {
+                append("Expected a fully expanded type for $typeRefName of ${owner::class.simpleName}(${(owner as? FirDeclaration)?.origin}) but ${typeRef.coneType} found")
             }
         }
     ) {
