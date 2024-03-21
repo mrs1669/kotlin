@@ -52,13 +52,14 @@ class IrBuiltInsOverFir(
     private val components: Fir2IrComponents,
     override val languageVersionSettings: LanguageVersionSettings,
     private val moduleDescriptor: FirModuleDescriptor,
-    irMangler: KotlinMangler.IrMangler
+    irMangler: KotlinMangler.IrMangler,
+    private val firSymbolProvider: FirSymbolProvider? = null
 ) : IrBuiltIns() {
     private val session: FirSession
         get() = components.session
 
     private val symbolProvider: FirSymbolProvider
-        get() = session.symbolProvider
+        get() = firSymbolProvider ?: session.symbolProvider
 
     override val irFactory: IrFactory = components.irFactory
 
@@ -631,7 +632,7 @@ class IrBuiltInsOverFir(
 
     private fun loadClassSafe(classId: ClassId): IrClassSymbol? {
         val firClassSymbol = symbolProvider.getClassLikeSymbolByClassId(classId) as? FirRegularClassSymbol ?: return null
-        return components.classifierStorage.getIrClassSymbol(firClassSymbol)
+        return components.classifierStorage.getIrClassSymbol(firClassSymbol, firSymbolProvider)
     }
 
     @OptIn(UnsafeDuringIrConstructionAPI::class)
@@ -700,7 +701,7 @@ class IrBuiltInsOverFir(
 
         val irFun4SignatureCalculation = makeWithSymbol(IrSimpleFunctionSymbolImpl())
         val signature = irSignatureBuilder.computeSignature(irFun4SignatureCalculation)
-        return components.symbolTable.declareSimpleFunction(
+        return components.symbolTable.declareSimpleFunctionIfNotExists(
             signature,
             { IrSimpleFunctionPublicSymbolImpl(signature, null) },
             ::makeWithSymbol

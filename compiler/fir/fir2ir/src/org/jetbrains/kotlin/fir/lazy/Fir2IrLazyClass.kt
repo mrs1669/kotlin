@@ -12,6 +12,7 @@ import org.jetbrains.kotlin.fir.backend.generators.FirBasedFakeOverrideGenerator
 import org.jetbrains.kotlin.fir.backend.generators.isFakeOverride
 import org.jetbrains.kotlin.fir.declarations.*
 import org.jetbrains.kotlin.fir.declarations.utils.*
+import org.jetbrains.kotlin.fir.resolve.providers.FirSymbolProvider
 import org.jetbrains.kotlin.fir.scopes.FirContainingNamesAwareScope
 import org.jetbrains.kotlin.fir.scopes.processClassifiersByName
 import org.jetbrains.kotlin.fir.symbols.impl.FirFieldSymbol
@@ -40,6 +41,7 @@ class Fir2IrLazyClass(
     override val fir: FirRegularClass,
     override val symbol: IrClassSymbol,
     override var parent: IrDeclarationParent,
+    private val firSymbolProvider: FirSymbolProvider?,
 ) : IrClass(), AbstractFir2IrLazyDeclaration<FirRegularClass>, Fir2IrTypeParametersContainer,
     IrMaybeDeserializedClass, DeserializableClass, Fir2IrComponents by components {
     init {
@@ -165,7 +167,7 @@ class Fir2IrLazyClass(
             if (shouldBuildStub(constructor)) {
                 // Lazy declarations are created together with their symbol, so it's safe to take the owner here
                 @OptIn(UnsafeDuringIrConstructionAPI::class)
-                result += declarationStorage.getIrConstructorSymbol(constructor.symbol).owner
+                result += declarationStorage.getIrConstructorSymbol(constructor.symbol, firSymbolProvider = firSymbolProvider).owner
             }
         }
 

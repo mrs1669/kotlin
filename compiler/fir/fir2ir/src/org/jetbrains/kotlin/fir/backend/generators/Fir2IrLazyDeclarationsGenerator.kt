@@ -10,6 +10,7 @@ import org.jetbrains.kotlin.fir.containingClassLookupTag
 import org.jetbrains.kotlin.fir.declarations.*
 import org.jetbrains.kotlin.fir.isSubstitutionOrIntersectionOverride
 import org.jetbrains.kotlin.fir.lazy.*
+import org.jetbrains.kotlin.fir.resolve.providers.FirSymbolProvider
 import org.jetbrains.kotlin.fir.unwrapUseSiteSubstitutionOverrides
 import org.jetbrains.kotlin.ir.declarations.*
 import org.jetbrains.kotlin.ir.symbols.*
@@ -66,10 +67,11 @@ class Fir2IrLazyDeclarationsGenerator(val components: Fir2IrComponents) : Fir2Ir
     fun createIrLazyClass(
         firClass: FirRegularClass,
         irParent: IrDeclarationParent,
-        symbol: IrClassSymbol
+        symbol: IrClassSymbol,
+        firSymbolProvider: FirSymbolProvider?,
     ): Fir2IrLazyClass = firClass.convertWithOffsets { startOffset, endOffset ->
         val firClassOrigin = firClass.irOrigin()
-        Fir2IrLazyClass(components, startOffset, endOffset, firClassOrigin, firClass, symbol, irParent)
+        Fir2IrLazyClass(components, startOffset, endOffset, firClassOrigin, firClass, symbol, irParent, firSymbolProvider)
     }
 
     fun createIrLazyTypeAlias(

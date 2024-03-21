@@ -26,6 +26,8 @@ import org.jetbrains.kotlin.fir.lazy.Fir2IrLazyConstructor
 import org.jetbrains.kotlin.fir.lazy.Fir2IrLazyProperty
 import org.jetbrains.kotlin.fir.lazy.Fir2IrLazySimpleFunction
 import org.jetbrains.kotlin.fir.resolve.getContainingClass
+import org.jetbrains.kotlin.fir.resolve.providers.FirProvider
+import org.jetbrains.kotlin.fir.resolve.providers.FirSymbolProvider
 import org.jetbrains.kotlin.fir.resolve.providers.firProvider
 import org.jetbrains.kotlin.fir.resolve.toFirRegularClass
 import org.jetbrains.kotlin.fir.resolve.toSymbol
@@ -527,14 +529,18 @@ class Fir2IrDeclarationStorage(
         constructorCache[constructor] = irConstructorSymbol
     }
 
-    fun getIrConstructorSymbol(firConstructorSymbol: FirConstructorSymbol, potentiallyExternal: Boolean = true): IrConstructorSymbol {
+    fun getIrConstructorSymbol(
+        firConstructorSymbol: FirConstructorSymbol,
+        potentiallyExternal: Boolean = true,
+        firSymbolProvider: FirSymbolProvider? = null,
+    ): IrConstructorSymbol {
         val constructor = firConstructorSymbol.fir
         getCachedIrConstructorSymbol(constructor)?.let { return it }
 
         // caching of created constructor is not called here, because `callablesGenerator` calls `cacheIrConstructor` by itself
         val symbol = IrConstructorSymbolImpl()
         if (potentiallyExternal) {
-            val irParent = findIrParent(constructor, fakeOverrideOwnerLookupTag = null)
+            val irParent = findIrParent(constructor, fakeOverrideOwnerLookupTag = null, firSymbolProvider = firSymbolProvider)
             val isIntrinsicConstEvaluation =
                 constructor.returnTypeRef.coneType.classId == StandardClassIds.Annotations.IntrinsicConstEvaluation
             if (irParent.isExternalParent() || isIntrinsicConstEvaluation) {
@@ -1453,14 +1459,21 @@ class Fir2IrDeclarationStorage(
         packageFqName: FqName,
         parentLookupTag: ConeClassLikeLookupTag?,
         firBasedSymbol: FirBasedSymbol<*>,
-        firOrigin: FirDeclarationOrigin
+        firOrigin: FirDeclarationOrigin,
+        firSymbolProvider: FirSymbolProvider? = null,
     ): IrDeclarationParent? {
         if (parentLookupTag != null) {
             // At this point all source classes should be already created and bound to symbols
             @OptIn(UnsafeDuringIrConstructionAPI::class)
-            return classifierStorage.getIrClassSymbol(parentLookupTag)?.owner
+            val result = if (firSymbolProvider != null) {
+                firSymbolProvider.getClassLikeSymbolByClassId(parentLookupTag.classId)?.let { classSymbol ->
+                    (classSymbol as? FirClassSymbol<*>)?.let { classifierStorage.getIrClassSymbol(it).owner }
+                }
+            } else {
+                classifierStorage.getIrClassSymbol(parentLookupTag)?.owner
+            }
+            return result
         }
-
 
         // TODO: All classes from BUILT_INS_PACKAGE_FQ_NAMES are considered built-ins now,
         // which is not exact and can lead to some problems
@@ -1530,6 +1543,7 @@ class Fir2IrDeclarationStorage(
     internal fun findIrParent(
         callableDeclaration: FirCallableDeclaration,
         fakeOverrideOwnerLookupTag: ConeClassLikeLookupTag?,
+        firSymbolProvider: FirSymbolProvider? = null,
     ): IrDeclarationParent? {
         val firBasedSymbol = callableDeclaration.symbol
         val callableId = firBasedSymbol.callableId
@@ -1543,7 +1557,8 @@ class Fir2IrDeclarationStorage(
             callableId.packageName,
             parentLookupTag,
             firBasedSymbol,
-            callableOrigin
+            callableOrigin,
+            firSymbolProvider,
         )
     }
 

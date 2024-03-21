@@ -12,6 +12,7 @@ import org.jetbrains.kotlin.fir.backend.generators.isExternalParent
 import org.jetbrains.kotlin.fir.declarations.*
 import org.jetbrains.kotlin.fir.declarations.utils.visibility
 import org.jetbrains.kotlin.fir.expressions.FirAnonymousObjectExpression
+import org.jetbrains.kotlin.fir.resolve.providers.FirSymbolProvider
 import org.jetbrains.kotlin.fir.resolve.providers.symbolProvider
 import org.jetbrains.kotlin.fir.resolve.toSymbol
 import org.jetbrains.kotlin.fir.symbols.ConeClassLikeLookupTag
@@ -197,7 +198,7 @@ class Fir2IrClassifierStorage(
      *
      * But on the first FIR2IR stage this API should not be used
      */
-    fun getIrClass(firClass: FirClass): IrClass {
+    fun getIrClass(firClass: FirClass, firSymbolProvider: FirSymbolProvider? = null): IrClass {
         getCachedIrClass(firClass)?.let { return it }
         if (firClass is FirAnonymousObject || firClass is FirRegularClass && firClass.visibility == Visibilities.Local) {
             return createAndCacheLocalIrClassOnTheFly(firClass)
@@ -211,7 +212,7 @@ class Fir2IrClassifierStorage(
 
         classCache[firClass] = symbol
         check(irParent.isExternalParent()) { "Source classes should be created separately before referencing" }
-        val irClass = lazyDeclarationsGenerator.createIrLazyClass(firClass, irParent, symbol)
+        val irClass = lazyDeclarationsGenerator.createIrLazyClass(firClass, irParent, symbol, firSymbolProvider)
         // NB: this is needed to prevent recursions in case of self bounds
         irClass.prepareTypeParameters()
 
@@ -234,8 +235,8 @@ class Fir2IrClassifierStorage(
         return getCachedIrLocalClass(klass) ?: classCache[klass]?.owner
     }
 
-    fun getIrClassSymbol(firClassSymbol: FirClassSymbol<*>): IrClassSymbol {
-        return getIrClass(firClassSymbol.fir).symbol
+    fun getIrClassSymbol(firClassSymbol: FirClassSymbol<*>, firSymbolProvider: FirSymbolProvider? = null): IrClassSymbol {
+        return getIrClass(firClassSymbol.fir, firSymbolProvider).symbol
     }
 
     fun getIrClassSymbol(lookupTag: ConeClassLikeLookupTag): IrClassSymbol? {

@@ -13,14 +13,20 @@ import org.jetbrains.kotlin.backend.common.actualizer.SpecialFakeOverrideSymbols
 import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.builtins.KotlinBuiltIns
+import org.jetbrains.kotlin.config.AnalysisFlags
 import org.jetbrains.kotlin.diagnostics.impl.BaseDiagnosticsCollector
 import org.jetbrains.kotlin.fir.FirSession
 import org.jetbrains.kotlin.fir.analysis.checkers.MppCheckerKind
 import org.jetbrains.kotlin.fir.backend.*
 import org.jetbrains.kotlin.fir.backend.jvm.Fir2IrJvmSpecialAnnotationSymbolProvider
 import org.jetbrains.kotlin.fir.declarations.FirFile
+import org.jetbrains.kotlin.fir.descriptors.FirModuleDescriptor
 import org.jetbrains.kotlin.fir.lazy.Fir2IrLazyClass
+import org.jetbrains.kotlin.fir.moduleData
 import org.jetbrains.kotlin.fir.resolve.ScopeSession
+import org.jetbrains.kotlin.fir.resolve.providers.impl.FirBuiltinSymbolProvider
+import org.jetbrains.kotlin.fir.resolve.providers.impl.FirCachingCompositeSymbolProvider
+import org.jetbrains.kotlin.fir.resolve.providers.symbolProvider
 import org.jetbrains.kotlin.fir.signaturer.FirBasedSignatureComposer
 import org.jetbrains.kotlin.ir.IrBuiltIns
 import org.jetbrains.kotlin.ir.IrElement
@@ -36,6 +42,7 @@ import org.jetbrains.kotlin.ir.util.KotlinMangler
 import org.jetbrains.kotlin.ir.visitors.IrElementVisitorVoid
 import org.jetbrains.kotlin.ir.visitors.acceptChildrenVoid
 import org.jetbrains.kotlin.ir.visitors.acceptVoid
+import org.jetbrains.kotlin.platform.jvm.isJvm
 import org.jetbrains.kotlin.utils.addToStdlib.runIf
 
 data class FirResult(val outputs: List<ModuleCompilerAnalyzedOutput>)
@@ -77,7 +84,16 @@ fun FirResult.convertToIrAndActualize(
 
     require(outputs.isNotEmpty()) { "No modules found" }
 
+    val lastOutputSession = outputs.last().session
+    val isStdLibCompilationWithJvm = lastOutputSession.moduleData.platform.isJvm() &&
+            fir2IrConfiguration.languageVersionSettings.getFlag(AnalysisFlags.stdlibCompilation)
+    val builtinSymbolProviderForJvm by lazy(LazyThreadSafetyMode.NONE) {
+        val dependencyProviders = (lastOutputSession.symbolProvider as FirCachingCompositeSymbolProvider).providers
+        dependencyProviders.filterIsInstance<FirBuiltinSymbolProvider>().single()
+    }
+
     var irBuiltIns: IrBuiltInsOverFir? = null
+    var irBuiltInsForStdLib: IrBuiltInsOverFir? = null
     val irOutputs = outputs.map {
         convertToIr(
             it,
@@ -93,7 +109,19 @@ fun FirResult.convertToIrAndActualize(
             actualizerTypeContextProvider,
         ).also { result ->
             fir2IrResultPostCompute(it, result)
-            if (irBuiltIns == null) {
+            if (isStdLibCompilationWithJvm && !it.session.moduleData.isCommon) {
+                if (irBuiltInsForStdLib == null) {
+                    irBuiltInsForStdLib = IrBuiltInsOverFir(
+                        result.components,
+                        fir2IrConfiguration.languageVersionSettings,
+                        //irBuiltIns!!.moduleDescriptor,
+                        FirModuleDescriptor.createSourceModuleDescriptor(it.session, kotlinBuiltIns),
+                        irMangler,
+                        firSymbolProvider = builtinSymbolProviderForJvm,
+                    )
+                }
+                irBuiltIns = irBuiltInsForStdLib
+            } else if (irBuiltIns == null) {
                 irBuiltIns = result.components.irBuiltIns
             }
         }
@@ -101,6 +129,10 @@ fun FirResult.convertToIrAndActualize(
 
     val (irModuleFragment, components, pluginContext) = irOutputs.last()
     val allIrModules = irOutputs.map { it.irModuleFragment }
+
+    val actualClassExtractor = runIf(isStdLibCompilationWithJvm) {
+        FirBuiltinsActualClassExtractor(builtinSymbolProviderForJvm, components.classifierStorage)
+    }
 
     val irActualizer = if (allIrModules.size == 1) null else IrActualizer(
         KtDiagnosticReporterWithImplicitIrBasedContext(
@@ -112,6 +144,7 @@ fun FirResult.convertToIrAndActualize(
         fir2IrConfiguration.useFirBasedFakeOverrideGenerator,
         irModuleFragment,
         allIrModules.dropLast(1),
+        actualClassExtractor,
     )
 
     if (!fir2IrConfiguration.useFirBasedFakeOverrideGenerator) {
