@@ -34155,12 +34155,6 @@ public class LLFirPreresolvedReversedDiagnosticCompilerFE10TestDataTestGenerated
       }
 
       @Test
-      @TestMetadata("implicitResolveWithJump.kts")
-      public void testImplicitResolveWithJump() {
-        runTest("compiler/testData/diagnostics/tests/script/implicitResolveWithJump.kts");
-      }
-
-      @Test
       @TestMetadata("imports.kts")
       public void testImports() {
         runTest("compiler/testData/diagnostics/tests/script/imports.kts");

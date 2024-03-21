@@ -37,7 +37,6 @@ import org.jetbrains.kotlin.fir.types.builder.buildErrorTypeRef
 import org.jetbrains.kotlin.fir.utils.exceptions.withFirEntry
 import org.jetbrains.kotlin.fir.visitors.FirTransformer
 import org.jetbrains.kotlin.util.PrivateForInline
-import org.jetbrains.kotlin.utils.addToStdlib.firstIsInstanceOrNull
 import org.jetbrains.kotlin.utils.exceptions.requireWithAttachment
 
 @OptIn(AdapterForResolveProcessor::class)
@@ -308,7 +307,6 @@ open class ReturnTypeCalculatorWithJump(
 
             val provider = session.firProvider
             val file = provider.getFirCallableContainerFile(symbol)
-            val script = file?.declarations?.firstIsInstanceOrNull<FirScript>()
 
             val outerClasses = generateSequence(symbol.containingClassLookupTag()?.classId) { classId ->
                 classId.outerClassId
@@ -322,7 +320,7 @@ open class ReturnTypeCalculatorWithJump(
                     )
                 }
             }
-            (listOfNotNull(file, script) + outerClasses.filterNotNull().asReversed()) to null
+            (listOf(file) + outerClasses.filterNotNull().asReversed()) to null
         }
 
         val previousTowerDataContexts = outerBodyResolveContext?.regularTowerDataContexts
