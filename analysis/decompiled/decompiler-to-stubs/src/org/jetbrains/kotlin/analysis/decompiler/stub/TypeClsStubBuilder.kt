@@ -19,7 +19,6 @@ import org.jetbrains.kotlin.metadata.jvm.JvmProtoBuf
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
-import org.jetbrains.kotlin.name.SpecialNames
 import org.jetbrains.kotlin.protobuf.MessageLite
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.stubs.KotlinUserTypeStub
@@ -40,11 +39,6 @@ class TypeClsStubBuilder(private val c: ClsStubBuilderContext) {
         additionalAnnotations: () -> List<AnnotationWithTarget> = { emptyList() },
         loadTypeAnnotations: (Type) -> List<AnnotationWithArgs> = { c.components.annotationLoader.loadTypeAnnotations(it, c.nameResolver) }
     ) {
-        val abbreviatedType = type.abbreviatedType(c.typeTable)
-        if (abbreviatedType != null) {
-            return createTypeReferenceStub(parent, abbreviatedType, additionalAnnotations)
-        }
-
         val typeReference = KotlinPlaceHolderStubImpl<KtTypeReference>(parent, KtStubElementTypes.TYPE_REFERENCE)
 
         val allAnnotationsInType = loadTypeAnnotations(type)
@@ -68,6 +62,12 @@ class TypeClsStubBuilder(private val c: ClsStubBuilderContext) {
         }
     }
 
+    // TODO (marco): May not be necessary, as it seems like the abbreviated type is the outermost type alias already.
+    private fun getOutermostAbbreviatedType(type: Type, isStrict: Boolean = true): Type? {
+        val abbreviatedType = type.abbreviatedType(c.typeTable) ?: return type.takeUnless { isStrict }
+        return getOutermostAbbreviatedType(abbreviatedType, isStrict = false)
+    }
+
     private fun nullableTypeParent(parent: KotlinStubBaseImpl<*>, type: Type): KotlinStubBaseImpl<*> = if (type.nullable)
         KotlinPlaceHolderStubImpl<KtNullableType>(parent, KtStubElementTypes.NULLABLE_TYPE)
     else
@@ -84,20 +84,24 @@ class TypeClsStubBuilder(private val c: ClsStubBuilderContext) {
             createDefinitelyNotNullTypeStub(parent, typeParameterClassId, upperBoundType)
         } else {
             val nullableParentWrapper = nullableTypeParent(parent, type)
-            createStubForTypeName(typeParameterClassId, nullableParentWrapper, { upperBoundType })
+            createStubForTypeName(typeParameterClassId, nullableParentWrapper, upperBoundFun = { upperBoundType })
         }
     }
 
     private fun createDefinitelyNotNullTypeStub(parent: KotlinStubBaseImpl<*>, classId: ClassId, upperBoundType: KotlinTypeBean?) {
         val intersectionType = KotlinPlaceHolderStubImpl<KtIntersectionType>(parent, KtStubElementTypes.INTERSECTION_TYPE)
         val leftReference = KotlinPlaceHolderStubImpl<KtTypeReference>(intersectionType, KtStubElementTypes.TYPE_REFERENCE)
-        createStubForTypeName(classId, leftReference, { upperBoundType })
+        createStubForTypeName(classId, leftReference, upperBoundFun = { upperBoundType })
         val rightReference = KotlinPlaceHolderStubImpl<KtTypeReference>(intersectionType, KtStubElementTypes.TYPE_REFERENCE)
         val userType = KotlinUserTypeStubImpl(rightReference)
         KotlinNameReferenceExpressionStubImpl(userType, StandardNames.FqNames.any.shortName().ref(), true)
     }
 
-    private fun createClassReferenceTypeStub(parent: KotlinStubBaseImpl<*>, type: Type, annotations: List<AnnotationWithTarget>) {
+    private fun createClassReferenceTypeStub(
+        parent: KotlinStubBaseImpl<*>,
+        type: Type,
+        annotations: List<AnnotationWithTarget>,
+    ) {
         if (type.hasFlexibleTypeCapabilitiesId()) {
             val id = c.nameResolver.getString(type.flexibleTypeCapabilitiesId)
 
@@ -140,6 +144,8 @@ class TypeClsStubBuilder(private val c: ClsStubBuilderContext) {
                 val argument = type.getExtension(JvmProtoBuf.typeAnnotation).find { c.nameResolver.getClassId(it.id).asSingleFqName() == StandardNames.FqNames.contextFunctionTypeParams }!!.getArgument(0)
                 argument.value.intValue.toInt()
             }
+
+            // TODO (marco): Add abbreviated type as well? (Check with tests first.)
             createFunctionTypeStub(nullableWrapper, type, isExtension, isSuspend, numContextReceivers)
 
             return
@@ -148,52 +154,79 @@ class TypeClsStubBuilder(private val c: ClsStubBuilderContext) {
         createTypeAnnotationStubs(parent, type, annotations)
 
         val outerTypeChain = generateSequence(type) { it.outerType(c.typeTable) }.toList()
+        val abbreviatedType = getOutermostAbbreviatedType(type)?.let { createKotlinClassTypeBean(it, preferAbbreviatedTypes = true) }
 
-        createStubForTypeName(classId, nullableTypeParent(parent, type), { level ->
-            if (level == 0) createKotlinTypeBean(type.flexibleUpperBound(c.typeTable))
-            else createKotlinTypeBean(outerTypeChain.getOrNull(level)?.flexibleUpperBound(c.typeTable))
-        }) { userTypeStub, index ->
-            outerTypeChain.getOrNull(index)?.let { createTypeArgumentListStub(userTypeStub, it.argumentList) }
-        }
+        createStubForTypeName(
+            classId,
+            nullableTypeParent(parent, type),
+            abbreviatedType = abbreviatedType,
+            upperBoundFun = { level ->
+                if (level == 0) createKotlinTypeBean(type.flexibleUpperBound(c.typeTable))
+                else createKotlinTypeBean(outerTypeChain.getOrNull(level)?.flexibleUpperBound(c.typeTable))
+            },
+            bindTypeArguments = { userTypeStub, index ->
+                outerTypeChain.getOrNull(index)?.let { createTypeArgumentListStub(userTypeStub, it.argumentList) }
+            },
+        )
     }
 
+    /**
+     * @param preferAbbreviatedTypes When `true`, type beans will be created from abbreviated types instead of expanded types, if
+     *  applicable. This should only be specified when creating abbreviated type beans. Note that it doesn't suffice to just pass the
+     *  abbreviated type as [type] to [createKotlinTypeBean], as the abbreviated type may have type arguments which themselves are
+     *  abbreviated types.
+     *
+     *  For example, if we have an abbreviated type `A = ListAlias<StringAlias>` which expands to `E = List<String>`, we have the following
+     *  outcomes:
+     *
+     *  - `createKotlinTypeBean(E, preferAbbreviatedTypes = false)` --> `List<String>`
+     *  - `createKotlinTypeBean(E, preferAbbreviatedTypes = true)`  --> `ListAlias<StringAlias>` (best approach)
+     *  - `createKotlinTypeBean(A, preferAbbreviatedTypes = false)` --> `ListAlias<String>`
+     *  - `createKotlinTypeBean(A, preferAbbreviatedTypes = true)`  --> `ListAlias<StringAlias>`
+     */
     fun createKotlinTypeBean(
-        type: Type?
+        type: Type?,
+        preferAbbreviatedTypes: Boolean = false,
     ): KotlinTypeBean? {
         if (type == null) return null
         val definitelyNotNull = Flags.DEFINITELY_NOT_NULL_TYPE.get(type.flags)
         val lowerBound = when {
-            type.hasTypeParameter() -> {
-                val lowerBound = KotlinTypeParameterTypeBean(
+            type.hasTypeParameter() ->
+                KotlinTypeParameterTypeBean(
                     c.typeParameters[type.typeParameter].asString(),
                     type.nullable,
                     definitelyNotNull
                 )
-                lowerBound
-            }
-            type.hasTypeParameterName() -> {
+            type.hasTypeParameterName() ->
                 KotlinTypeParameterTypeBean(
                     c.nameResolver.getString(type.typeParameterName),
                     type.nullable,
                     definitelyNotNull
                 )
-            }
-            else -> {
-                val classId = c.nameResolver.getClassId(if (type.hasClassName()) type.className else type.typeAliasName)
-                val arguments = type.argumentList.map { argument ->
-                    val kind = argument.projection.toProjectionKind()
-                    KotlinTypeArgumentBean(
-                        kind,
-                        if (kind == KtProjectionKind.STAR) null else createKotlinTypeBean(argument.type(c.typeTable))
-                    )
-                }
-                KotlinClassTypeBean(classId, arguments, type.nullable)
-            }
+            else -> createKotlinClassTypeBean(type, preferAbbreviatedTypes)
         }
-        val upperBoundBean = createKotlinTypeBean(type.flexibleUpperBound(c.typeTable))
+        val upperBoundBean = createKotlinTypeBean(type.flexibleUpperBound(c.typeTable), preferAbbreviatedTypes)
         return if (upperBoundBean != null) {
             KotlinFlexibleTypeBean(lowerBound, upperBoundBean)
         } else lowerBound
+    }
+
+    /**
+     * @param preferAbbreviatedTypes See [createKotlinTypeBean].
+     */
+    private fun createKotlinClassTypeBean(type: Type, preferAbbreviatedTypes: Boolean): KotlinClassTypeBean {
+        val targetType = if (preferAbbreviatedTypes) getOutermostAbbreviatedType(type) ?: type else type
+        val classId = c.nameResolver.getClassId(if (targetType.hasClassName()) targetType.className else targetType.typeAliasName)
+
+        val arguments = targetType.argumentList.map { argument ->
+            val kind = argument.projection.toProjectionKind()
+            KotlinTypeArgumentBean(
+                kind,
+                if (kind == KtProjectionKind.STAR) null else createKotlinTypeBean(argument.type(c.typeTable), preferAbbreviatedTypes)
+            )
+        }
+
+        return KotlinClassTypeBean(classId, arguments, targetType.nullable)
     }
 
     private fun createTypeAnnotationStubs(parent: KotlinStubBaseImpl<*>, type: Type, annotations: List<AnnotationWithTarget>) {

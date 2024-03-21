@@ -42,12 +42,14 @@ public class KtUserTypeElementType extends KtStubElementType<KotlinUserTypeStub,
     @NotNull
     @Override
     public KotlinUserTypeStub createStub(@NotNull KtUserType psi, StubElement parentStub) {
-        return new KotlinUserTypeStubImpl((StubElement<?>) parentStub, null);
+        return new KotlinUserTypeStubImpl((StubElement<?>) parentStub, null, null);
     }
 
     @Override
     public void serialize(@NotNull KotlinUserTypeStub stub, @NotNull StubOutputStream dataStream) throws IOException {
-        serializeType(dataStream, ((KotlinUserTypeStubImpl) stub).getUpperBound());
+        KotlinUserTypeStubImpl stubImpl = (KotlinUserTypeStubImpl) stub;
+        serializeType(dataStream, stubImpl.getUpperBound());
+        serializeType(dataStream, stubImpl.getAbbreviatedType());
     }
 
     private enum KotlinTypeBeanKind {
@@ -90,7 +92,15 @@ public class KtUserTypeElementType extends KtStubElementType<KotlinUserTypeStub,
     @NotNull
     @Override
     public KotlinUserTypeStub deserialize(@NotNull StubInputStream dataStream, StubElement parentStub) throws IOException {
-        return new KotlinUserTypeStubImpl((StubElement<?>) parentStub, deserializeType(dataStream));
+        return new KotlinUserTypeStubImpl((StubElement<?>) parentStub, deserializeType(dataStream), deserializeClassType(dataStream));
+    }
+
+    @Nullable
+    private static KotlinClassTypeBean deserializeClassType(@NotNull StubInputStream dataStream) throws IOException {
+        KotlinTypeBean type = deserializeType(dataStream);
+
+        // Ignore non-class types defensively to avoid throwing an exception from stub deserialization.
+        return type instanceof KotlinClassTypeBean ? (KotlinClassTypeBean) type : null;
     }
 
     @Nullable

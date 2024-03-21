@@ -28,9 +28,14 @@ import org.jetbrains.kotlin.types.model.KotlinTypeMarker
 import org.jetbrains.kotlin.types.model.SimpleTypeMarker
 import org.jetbrains.kotlin.types.model.TypeArgumentMarker
 
+/**
+ * @param abbreviatedType The type alias from which this type was originally expanded. It can be used to render or navigate to the original
+ *  type alias instead of the expanded type.
+ */
 class KotlinUserTypeStubImpl(
     parent: StubElement<out PsiElement>?,
-    val upperBound: KotlinTypeBean? = null
+    val upperBound: KotlinTypeBean? = null,
+    val abbreviatedType: KotlinClassTypeBean? = null,
 ) : KotlinStubBaseImpl<KtUserType>(parent, KtStubElementTypes.USER_TYPE), KotlinUserTypeStub
 
 sealed interface KotlinTypeBean : KotlinTypeMarker {
