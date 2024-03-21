@@ -26,7 +26,9 @@ import org.jetbrains.kotlin.utils.exceptions.errorWithAttachment
 
 @OptIn(DfaInternals::class)
 class VariableStorageImpl(private val session: FirSession) : VariableStorage() {
-    private val realVariables: MutableMap<Identifier, RealVariable> = HashMap()
+    // These are basically hash sets, since they map each key to itself. The only point of having them as maps
+    // is to deduplicate equal instances with lookups. The impact of that is questionable, but whatever.
+    private val realVariables: MutableMap<RealVariable, RealVariable> = HashMap()
     private val syntheticVariables: MutableMap<FirElement, SyntheticVariable> = HashMap()
 
     private val nextVariableIndex: Int
@@ -35,12 +37,14 @@ class VariableStorageImpl(private val session: FirSession) : VariableStorage() {
     fun clear(): VariableStorageImpl = VariableStorageImpl(session)
 
     override fun getLocalVariable(symbol: FirBasedSymbol<*>, isReceiver: Boolean): RealVariable? =
-        realVariables[Identifier(symbol, isReceiver, null, null)]
+        RealVariable(symbol, isReceiver, null, null, PropertyStability.STABLE_VALUE, nextVariableIndex).takeIfKnown()
+
+    fun getOrCreateLocalVariable(symbol: FirBasedSymbol<*>, isReceiver: Boolean): RealVariable =
+        RealVariable(symbol, isReceiver, null, null, PropertyStability.STABLE_VALUE, nextVariableIndex).remember()
 
     fun getAllLocalVariables(): Iterable<RealVariable> =
         realVariables.values.filter {
-            (it.identifier.symbol as? FirPropertySymbol)?.isLocal == true && it.identifier.dispatchReceiver == null &&
-                    it.identifier.extensionReceiver == null
+            it.symbol is FirPropertySymbol && it.symbol.isLocal && it.dispatchReceiver == null && it.extensionReceiver == null
         }
 
     // General pattern when using these functions:
@@ -93,12 +97,11 @@ class VariableStorageImpl(private val session: FirSession) : VariableStorage() {
             (getImpl(flow, it, createReal, unwrapAlias = true) ?: return null) as? RealVariable ?: return synthetic
         }
         val isReceiver = qualifiedAccess?.calleeReference is FirThisReference
-        val identifier = Identifier(symbol, isReceiver, dispatchReceiverVar, extensionReceiverVar)
         val combinedStability = stability
             .combineWithReceiverStability(dispatchReceiverVar?.stability)
             .combineWithReceiverStability(extensionReceiverVar?.stability)
-        val real = if (createReal) RealVariable(identifier, combinedStability, nextVariableIndex).remember() else realVariables[identifier]
-            ?: return null
+        val prototype = RealVariable(symbol, isReceiver, dispatchReceiverVar, extensionReceiverVar, combinedStability, nextVariableIndex)
+        val real = if (createReal) prototype.remember() else prototype.takeIfKnown() ?: return null
         return if (unwrapAlias) flow.unwrapVariable(real) else real
     }
 
@@ -108,29 +111,31 @@ class VariableStorageImpl(private val session: FirSession) : VariableStorage() {
     private fun DataFlowVariable.rememberSynthetic(): DataFlowVariable =
         if (this is SyntheticVariable) syntheticVariables.getOrPut(fir) { this } else this
 
+    private fun RealVariable.takeIfKnown(): RealVariable? =
+        realVariables[this]
+
     private fun RealVariable.remember(): RealVariable =
-        realVariables.getOrPut(identifier) {
-            identifier.dispatchReceiver?.dependentVariables?.add(this)
-            identifier.extensionReceiver?.dependentVariables?.add(this)
+        realVariables.getOrPut(this) {
+            dispatchReceiver?.dependentVariables?.add(this)
+            extensionReceiver?.dependentVariables?.add(this)
             this
         }
 
     fun copyRealVariableWithRemapping(variable: RealVariable, from: RealVariable, to: RealVariable): RealVariable {
         // Precondition: `variable in from.dependentVariables`, so at least one of the receivers is `from`.
-        val newIdentifier = with(variable.identifier) {
-            copy(
-                dispatchReceiver = if (dispatchReceiver == from) to else dispatchReceiver,
-                extensionReceiver = if (extensionReceiver == from) to else extensionReceiver,
-            )
+        return with(variable) {
+            val newDispatchReceiver = if (dispatchReceiver == from) to else dispatchReceiver
+            val newExtensionReceiver = if (extensionReceiver == from) to else extensionReceiver
+            RealVariable(symbol, isReceiver, newDispatchReceiver, newExtensionReceiver, stability, nextVariableIndex).remember()
         }
-        return RealVariable(newIdentifier, variable.stability, nextVariableIndex).remember()
     }
 
     fun getOrPut(variable: RealVariable): RealVariable {
-        val newIdentifier = with(variable.identifier) {
-            copy(dispatchReceiver = dispatchReceiver?.let(::getOrPut), extensionReceiver = extensionReceiver?.let(::getOrPut))
+        return with(variable) {
+            val newDispatchReceiver = dispatchReceiver?.let(::getOrPut)
+            val newExtensionReceiver = extensionReceiver?.let(::getOrPut)
+            RealVariable(symbol, isReceiver, newDispatchReceiver, newExtensionReceiver, stability, nextVariableIndex).remember()
         }
-        return RealVariable(newIdentifier, variable.stability, nextVariableIndex).remember()
     }
 
     private fun FirBasedSymbol<*>.getStability(qualifiedAccess: FirQualifiedAccessExpression?): PropertyStability? {
