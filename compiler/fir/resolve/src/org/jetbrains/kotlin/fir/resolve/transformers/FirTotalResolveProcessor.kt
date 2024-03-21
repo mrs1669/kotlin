@@ -80,6 +80,7 @@ fun FirResolvePhase.createCompilerProcessorByPhase(
         COMPANION_GENERATION -> FirCompanionGenerationProcessor(session, scopeSession)
         IMPORTS -> FirImportResolveProcessor(session, scopeSession)
         SUPER_TYPES -> FirSupertypeResolverProcessor(session, scopeSession)
+        SUPER_TYPE_ALIASES -> FirSuperTypeAliasProcessor(session, scopeSession)
         SEALED_CLASS_INHERITORS -> FirSealedClassInheritorsProcessor(session, scopeSession)
         TYPES -> FirTypeResolveProcessor(session, scopeSession)
         STATUS -> FirStatusResolveProcessor(session, scopeSession)

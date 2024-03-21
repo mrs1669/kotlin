@@ -165,21 +165,11 @@ private class FirApplySupertypesTransformer(
 
     private fun applyResolvedSupertypesToClass(firClass: FirClass) {
         if (firClass.superTypeRefs.any { it !is FirResolvedTypeRef || it is FirImplicitBuiltinTypeRef }) {
-            val supertypeRefs = getResolvedSupertypeRefs(firClass).map(::expandTypealiasInPlace)
+            val supertypeRefs = getResolvedSupertypeRefs(firClass)
             firClass.replaceSuperTypeRefs(supertypeRefs)
         }
 
         session.platformSupertypeUpdater?.updateSupertypesIfNeeded(firClass, scopeSession)
-    }
-
-    private fun expandTypealiasInPlace(typeRef: FirTypeRef): FirTypeRef {
-        return when (typeRef) {
-            is FirImplicitBuiltinTypeRef, is FirErrorTypeRef -> typeRef
-            else -> when (val expanded = typeRef.coneType.fullyExpandedType(session, ::getResolvedExpandedType)) {
-                typeRef.coneType -> typeRef
-                else -> expanded.assign(AbbreviatedTypeAttribute(typeRef.coneType)).let(typeRef::withReplacedConeType)
-            }
-        }
     }
 
 
@@ -201,7 +191,7 @@ private class FirApplySupertypesTransformer(
         if (typeAlias.expandedTypeRef is FirResolvedTypeRef) {
             return typeAlias
         }
-        typeAlias.replaceExpandedTypeRef(expandTypealiasInPlace(getResolvedExpandedTypeRef(typeAlias)))
+        typeAlias.replaceExpandedTypeRef(getResolvedExpandedTypeRef(typeAlias))
         return typeAlias
     }
 
@@ -212,9 +202,6 @@ private class FirApplySupertypesTransformer(
         }
         return supertypeRefs[0]
     }
-
-    private fun getResolvedExpandedType(typeAlias: FirTypeAlias): ConeClassLikeType? =
-        typeAlias.expandedConeType ?: getResolvedExpandedTypeRef(typeAlias).coneTypeSafe<ConeClassLikeType>()
 }
 
 private fun FirClassLikeDeclaration.typeParametersScope(): FirScope? {

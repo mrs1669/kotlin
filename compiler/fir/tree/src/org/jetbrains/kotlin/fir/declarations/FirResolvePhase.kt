@@ -62,6 +62,7 @@ package org.jetbrains.kotlin.fir.declarations
  * - [COMPILER_REQUIRED_ANNOTATIONS] – The compiler can jump from the use site of an annotation to the annotation class
  *   and resolve its annotations as well.
  * - [SUPER_TYPES] – The compiler resolves super types recursively for all classes from the bottom class to the top one.
+ * - [SUPER_TYPE_ALIASES] - The compiler expands typealiases in supertypes and typealias expansions.
  * - [STATUS] – The compiler resolves the status for super declarations first.
  * - [IMPLICIT_TYPES_BODY_RESOLVE] – The compiler can jump from one declaration to another during this phase as one
  *   declaration with an implicit type can depend on the implicit type of another declaration,
@@ -116,6 +117,14 @@ enum class FirResolvePhase(val noProcessor: Boolean = false) {
      * This is a [*jumping phase*][FirResolvePhase].
      */
     SUPER_TYPES,
+
+    /**
+     * The compiler replaces typealias types with their expansions in supertypes and other
+     * typealias expansions.
+     *
+     * This is a [*jumping phase*][FirResolvePhase].
+     */
+    SUPER_TYPE_ALIASES,
 
     /**
      * The compiler collects and records all inheritors of sealed classes.
