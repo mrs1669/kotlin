@@ -607,6 +607,12 @@ private val inlineObjectsWithPureInitializationLoweringPhase = makeIrModulePhase
     prerequisite = setOf(purifyObjectInstanceGettersLoweringPhase)
 )
 
+private val whenBranchOptimiserLoweringPhase = makeIrModulePhase(
+    ::WhenBranchOptimiserLowering,
+    name = "WhenBranchOptimiserLowering",
+    description = "[Optimization] Remove unreachable code in when's",
+)
+
 private val fieldInitializersLoweringPhase = makeIrModulePhase(
     ::FieldInitializersLowering,
     name = "FieldInitializersLowering",
@@ -750,6 +756,7 @@ val loweringList = listOf(
     invokeStaticInitializersPhase,
     staticMembersLoweringPhase,
     inlineObjectsWithPureInitializationLoweringPhase,
+    whenBranchOptimiserLoweringPhase,
     validateIrAfterLowering,
 )
 
