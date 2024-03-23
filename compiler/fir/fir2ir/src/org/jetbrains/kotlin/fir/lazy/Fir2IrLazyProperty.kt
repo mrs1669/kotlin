@@ -270,7 +270,10 @@ class Fir2IrLazyProperty(
             // See bridgeForJavaSyntheticProperty.kt for example
             val symbol = fir.symbol
             if (symbol is FirJavaOverriddenSyntheticPropertySymbol && symbol.overriddenKotlinProperty != null) {
-                add(declarationStorage.getIrPropertySymbol(symbol.overriddenKotlinProperty!!) as IrPropertySymbol)
+                val irSymbol = declarationStorage.getIrPropertySymbol(symbol.overriddenKotlinProperty!!) as IrPropertySymbol
+                if (!contains(irSymbol)) {
+                    add(irSymbol)
+                }
             }
         }
     }
