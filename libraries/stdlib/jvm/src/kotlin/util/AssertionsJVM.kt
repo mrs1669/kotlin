@@ -26,6 +26,10 @@ public inline fun assert(value: Boolean) {
 /**
  * Throws an [AssertionError] calculated by [lazyMessage] if the [value] is false
  * and runtime assertions have been enabled on the JVM using the *-ea* JVM option.
+ *
+ * The laziness of [value] argument depends on the value of `-Xassertions` compiler flag.
+ * By default (`-Xassertions=legacy`) the argument is evaluated,
+ * to make it lazy, use `-Xassertions=jvm`.
  */
 @kotlin.internal.InlineOnly
 public inline fun assert(value: Boolean, lazyMessage: () -> Any) {
