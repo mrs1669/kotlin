@@ -23,10 +23,12 @@ class RealVariable(
     val isReceiver: Boolean,
     val dispatchReceiver: RealVariable?,
     val extensionReceiver: RealVariable?,
-    val stability: SmartcastStability,
     variableIndexForDebug: Int,
 ) : DataFlowVariable(variableIndexForDebug) {
     val dependentVariables = mutableSetOf<RealVariable>()
+
+    var stability: SmartcastStability = SmartcastStability.STABLE_VALUE
+        internal set
 
     override fun equals(other: Any?): Boolean =
         other is RealVariable && symbol == other.symbol &&
