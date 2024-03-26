@@ -101,5 +101,6 @@ abstract class WasmEnvironmentConfigurator(testServices: TestServices) : Environ
         configuration.put(JSConfigurationKeys.SOURCE_MAP_EMBED_SOURCES, sourceMapSourceEmbedding)
 
         configuration.put(JSConfigurationKeys.WASM_USE_TRAPS_INSTEAD_OF_EXCEPTIONS, DISABLE_WASM_EXCEPTION_HANDLING in registeredDirectives)
+        configuration.put(JSConfigurationKeys.WASM_USE_NEW_EXCEPTION_PROPOSAL, true)
     }
 }

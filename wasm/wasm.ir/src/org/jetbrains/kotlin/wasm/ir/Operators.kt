@@ -388,6 +388,16 @@ enum class WasmOp(
     EXTERN_EXTERNALIZE("extern.externalize", 0xFB_1B), // anyref -> externref
 
     // ============================================================
+    // Exception handling
+    // WIP: https://github.com/WebAssembly/exception-handling
+    TRY_TABLE("try_table", 0x1f, listOf(BLOCK_TYPE, CONST_I32)),
+    NEW_CATCH("catch", 0x00, listOf(TAG_IDX, LABEL_IDX)),
+    NEW_CATCH_REF("catch_ref", 0x01, listOf(TAG_IDX, LABEL_IDX)),
+    NEW_CATCH_ALL("catch_all", 0x02, LABEL_IDX),
+    NEW_CATCH_ALL_REF("catch_all_ref", 0x03, LABEL_IDX),
+    THROW_REF("throw_ref", 0x0a, LABEL_IDX),
+
+    // ============================================================
     PSEUDO_COMMENT_PREVIOUS_INSTR("<comment-single>", WASM_OP_PSEUDO_OPCODE),
     PSEUDO_COMMENT_GROUP_START("<comment-group-start>", WASM_OP_PSEUDO_OPCODE),
     PSEUDO_COMMENT_GROUP_END("<comment-group-end>", WASM_OP_PSEUDO_OPCODE),

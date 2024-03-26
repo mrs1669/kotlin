@@ -19,7 +19,8 @@ import java.io.File
 class WasmBoxRunner(
     testServices: TestServices
 ) : AbstractWasmArtifactsCollector(testServices) {
-    private val vmsToCheck: List<WasmVM> = listOf(WasmVM.V8, WasmVM.SpiderMonkey)
+    // V8 doesn't work, just throw `unreachable` on the `try_table` instruction
+    private val vmsToCheck: List<WasmVM> = listOf(/* WasmVM.V8, */ WasmVM.SpiderMonkey)
 
     override fun processAfterAllModules(someAssertionWasFailed: Boolean) {
         if (!someAssertionWasFailed) {

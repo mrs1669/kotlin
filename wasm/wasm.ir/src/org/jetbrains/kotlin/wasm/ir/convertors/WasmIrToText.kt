@@ -123,7 +123,16 @@ class WasmIrToText(
         newLine()
         stringBuilder.append(wasmInstr.operator.mnemonic)
 
-        if (op == WasmOp.BLOCK || op == WasmOp.LOOP || op == WasmOp.IF || op == WasmOp.ELSE || op == WasmOp.CATCH || op == WasmOp.CATCH_ALL  || op == WasmOp.TRY)
+        if (
+            op == WasmOp.BLOCK ||
+            op == WasmOp.LOOP ||
+            op == WasmOp.IF ||
+            op == WasmOp.ELSE ||
+            op == WasmOp.CATCH ||
+            op == WasmOp.CATCH_ALL ||
+            op == WasmOp.TRY ||
+            op == WasmOp.TRY_TABLE
+        )
             indent++
 
         if (wasmInstr.operator in setOf(WasmOp.CALL_INDIRECT, WasmOp.TABLE_INIT)) {

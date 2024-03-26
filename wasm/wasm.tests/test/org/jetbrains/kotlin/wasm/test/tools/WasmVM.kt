@@ -37,6 +37,8 @@ internal sealed class WasmVM(val shortName: String) {
                 *toolArgs.toTypedArray(),
                 *jsFiles.toTypedArray(),
                 "--module",
+                "--no-experimental-wasm-legacy-eh",
+                "--experimental-wasm-exnref",
                 entryMjs,
                 workingDirectory = workingDirectory,
             )
