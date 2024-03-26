@@ -101,12 +101,14 @@ abstract class AbstractXCTestExecutor(
             originalBundle
         }
 
-        val response = executor.execute(request.copying {
-            environment["DYLD_FRAMEWORK_PATH"] = frameworkPath
-            executableAbsolutePath = xcTestExecutablePath
-            args.clear()
-            args.add(bundleToExecute.absolutePath)
-        })
+        val response = executor.execute(
+            request.copy(
+                executableAbsolutePath = xcTestExecutablePath,
+                args = mutableListOf(bundleToExecute.absolutePath),
+                environment = request.environment.toMap(mutableMapOf())
+                    .also { it["DYLD_FRAMEWORK_PATH"] = frameworkPath }
+            )
+        )
 
         if (bundleToExecute != originalBundle) {
             bundleToExecute.apply {
