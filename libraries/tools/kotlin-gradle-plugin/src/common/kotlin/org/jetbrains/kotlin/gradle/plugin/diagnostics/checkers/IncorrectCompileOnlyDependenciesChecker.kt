@@ -18,6 +18,7 @@ internal object IncorrectCompileOnlyDependenciesChecker : KotlinGradleProjectChe
         val multiplatform = multiplatformExtension ?: return
 
         val compilationsWithCompileOnlyDependencies = multiplatform.targets
+            .filter { target -> !isAllowedCompileOnlyDependencies(target.platformType) }
             .flatMap { target -> compileOnlyDependencies(target) }
 
         if (compilationsWithCompileOnlyDependencies.any { it.dependencyCoords.isNotEmpty() }) {
@@ -33,11 +34,16 @@ internal object IncorrectCompileOnlyDependenciesChecker : KotlinGradleProjectChe
      * Extract all dependencies of [target], satisfying:
      * 1. they are `compileOnly`
      * 2. they are not exposed as api elements.
+     *
+     * Fetches Configurations leniently, just in case a plugin (e.g. AGP) isn't configured correctly.
      */
     private fun KotlinGradleProjectCheckerContext.compileOnlyDependencies(
         target: KotlinTarget,
     ): List<CompilationDependenciesPair> {
-        val apiElementsDependencies = project.configurations.getByName(target.apiElementsConfigurationName).allDependencies
+        val apiElementsDependencies = project.configurations
+            .findByName(target.apiElementsConfigurationName)
+            ?.allDependencies
+            .orEmpty()
 
         fun Dependency.isInApiElements(): Boolean =
             apiElementsDependencies.any { it.contentEquals(this) }
@@ -48,8 +54,10 @@ internal object IncorrectCompileOnlyDependenciesChecker : KotlinGradleProjectChe
 
         return compilationsIncompatibleWithCompileOnly.map { compilation ->
             val compileOnlyDependencies = project.configurations
-                .getByName(compilation.compileOnlyConfigurationName)
-                .allDependencies
+                .findByName(compilation.compileOnlyConfigurationName)
+                ?.allDependencies
+                .orEmpty()
+
             val nonApiCompileOnlyDependencies = compileOnlyDependencies.filter { !it.isInApiElements() }
 
             CompilationDependenciesPair(
