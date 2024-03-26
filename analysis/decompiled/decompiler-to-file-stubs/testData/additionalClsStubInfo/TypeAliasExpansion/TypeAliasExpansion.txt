@@ -59,7 +59,7 @@ KotlinStub$CLASS[classId=test/TypeAliasExpansion, fqName=test.TypeAliasExpansion
     KotlinStub$PROPERTY[fqName=test.TypeAliasExpansion.nestedParameterizedListAliasWithNestedStringAlias, hasDelegate=false, hasDelegateExpression=false, hasInitializer=false, hasReturnTypeRef=true, isExtension=false, isTopLevel=false, isVar=false, name=nestedParameterizedListAliasWithNestedStringAlias]
       KotlinStub$MODIFIER_LIST[public final]
       KotlinStub$TYPE_REFERENCE
-        KotlinStub$USER_TYPE    abbreviatedType: test.NestedParameterizedListAlias<test.NestedStringAlias>
+        KotlinStub$USER_TYPE    abbreviatedType: test.NestedParameterizedListAlias<kotlin.String (abbreviatedType: test.NestedStringAlias)>
           KotlinStub$USER_TYPE
             KotlinStub$USER_TYPE
               KotlinStub$REFERENCE_EXPRESSION[referencedName=kotlin]
@@ -109,7 +109,7 @@ KotlinStub$CLASS[classId=test/TypeAliasExpansion, fqName=test.TypeAliasExpansion
     KotlinStub$PROPERTY[fqName=test.TypeAliasExpansion.nestedParameterizedListAliasWithStringAlias, hasDelegate=false, hasDelegateExpression=false, hasInitializer=false, hasReturnTypeRef=true, isExtension=false, isTopLevel=false, isVar=false, name=nestedParameterizedListAliasWithStringAlias]
       KotlinStub$MODIFIER_LIST[public final]
       KotlinStub$TYPE_REFERENCE
-        KotlinStub$USER_TYPE    abbreviatedType: test.NestedParameterizedListAlias<test.StringAlias>
+        KotlinStub$USER_TYPE    abbreviatedType: test.NestedParameterizedListAlias<kotlin.String (abbreviatedType: test.StringAlias)>
           KotlinStub$USER_TYPE
             KotlinStub$USER_TYPE
               KotlinStub$REFERENCE_EXPRESSION[referencedName=kotlin]
@@ -141,7 +141,7 @@ KotlinStub$CLASS[classId=test/TypeAliasExpansion, fqName=test.TypeAliasExpansion
     KotlinStub$PROPERTY[fqName=test.TypeAliasExpansion.parameterizedListAliasWithNestedStringAlias, hasDelegate=false, hasDelegateExpression=false, hasInitializer=false, hasReturnTypeRef=true, isExtension=false, isTopLevel=false, isVar=false, name=parameterizedListAliasWithNestedStringAlias]
       KotlinStub$MODIFIER_LIST[public final]
       KotlinStub$TYPE_REFERENCE
-        KotlinStub$USER_TYPE    abbreviatedType: test.ParameterizedListAlias<test.NestedStringAlias>
+        KotlinStub$USER_TYPE    abbreviatedType: test.ParameterizedListAlias<kotlin.String (abbreviatedType: test.NestedStringAlias)>
           KotlinStub$USER_TYPE
             KotlinStub$USER_TYPE
               KotlinStub$REFERENCE_EXPRESSION[referencedName=kotlin]
@@ -157,7 +157,7 @@ KotlinStub$CLASS[classId=test/TypeAliasExpansion, fqName=test.TypeAliasExpansion
     KotlinStub$PROPERTY[fqName=test.TypeAliasExpansion.parameterizedListAliasWithParameterizedListAliasWithStringAlias, hasDelegate=false, hasDelegateExpression=false, hasInitializer=false, hasReturnTypeRef=true, isExtension=false, isTopLevel=false, isVar=false, name=parameterizedListAliasWithParameterizedListAliasWithStringAlias]
       KotlinStub$MODIFIER_LIST[public final]
       KotlinStub$TYPE_REFERENCE
-        KotlinStub$USER_TYPE    abbreviatedType: test.ParameterizedListAlias<test.ParameterizedListAlias<test.StringAlias>>
+        KotlinStub$USER_TYPE    abbreviatedType: test.ParameterizedListAlias<kotlin.collections.List<kotlin.String (abbreviatedType: test.StringAlias)> (abbreviatedType: test.ParameterizedListAlias<kotlin.String (abbreviatedType: test.StringAlias)>)>
           KotlinStub$USER_TYPE
             KotlinStub$USER_TYPE
               KotlinStub$REFERENCE_EXPRESSION[referencedName=kotlin]
@@ -198,7 +198,7 @@ KotlinStub$CLASS[classId=test/TypeAliasExpansion, fqName=test.TypeAliasExpansion
     KotlinStub$PROPERTY[fqName=test.TypeAliasExpansion.parameterizedListAliasWithStringAlias, hasDelegate=false, hasDelegateExpression=false, hasInitializer=false, hasReturnTypeRef=true, isExtension=false, isTopLevel=false, isVar=false, name=parameterizedListAliasWithStringAlias]
       KotlinStub$MODIFIER_LIST[public final]
       KotlinStub$TYPE_REFERENCE
-        KotlinStub$USER_TYPE    abbreviatedType: test.ParameterizedListAlias<test.StringAlias>
+        KotlinStub$USER_TYPE    abbreviatedType: test.ParameterizedListAlias<kotlin.String (abbreviatedType: test.StringAlias)>
           KotlinStub$USER_TYPE
             KotlinStub$USER_TYPE
               KotlinStub$REFERENCE_EXPRESSION[referencedName=kotlin]
