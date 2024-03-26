@@ -77,6 +77,7 @@ public class KtUserTypeElementType extends KtStubElementType<KotlinUserTypeStub,
                     serializeType(dataStream, argument.getType());
                 }
             }
+            serializeType(dataStream, ((KotlinClassTypeBean) type).getAbbreviatedType());
         }
         else if (type instanceof KotlinTypeParameterTypeBean) {
             dataStream.writeName(((KotlinTypeParameterTypeBean) type).getTypeParameterName());
@@ -123,7 +124,8 @@ public class KtUserTypeElementType extends KtStubElementType<KotlinUserTypeStub,
                     }
                     arguments.add(argument);
                 }
-                return new KotlinClassTypeBean(classId, arguments, isNullable);
+                KotlinClassTypeBean abbreviatedType = deserializeClassType(dataStream);
+                return new KotlinClassTypeBean(classId, arguments, isNullable, abbreviatedType);
             }
             case TYPE_PARAMETER: {
                 String typeParameterName = Objects.requireNonNull(dataStream.readNameString());

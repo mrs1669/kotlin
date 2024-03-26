@@ -51,9 +51,12 @@ fun createConstantValue(dataStream: StubInputStream): ConstantValue<*>? {
         KotlinConstantValueKind.ANNO -> {
             val classId = StubUtils.deserializeClassId(dataStream)!!
             val numberOfArgs = dataStream.readInt() - 1
-            AnnotationValue.create(KotlinClassTypeBean(classId, emptyList(), false), (0..numberOfArgs).associate {
-                Name.identifier(dataStream.readNameString()!!) to createConstantValue(dataStream)!!
-            })
+            AnnotationValue.create(
+                KotlinClassTypeBean(classId, emptyList(), nullable = false, abbreviatedType = null),
+                (0..numberOfArgs).associate {
+                    Name.identifier(dataStream.readNameString()!!) to createConstantValue(dataStream)!!
+                },
+            )
         }
     }
 }
@@ -195,7 +198,10 @@ fun createConstantValue(value: Any?): ConstantValue<*> {
         is Array<*> -> ArrayValue(value.map { createConstantValue(it) }.toList())
         is EnumData -> EnumValue(value.enumClassId, value.enumEntryName)
         is KClassData -> KClassValue(value.classId, value.arrayNestedness)
-        is AnnotationData -> AnnotationValue.create(KotlinClassTypeBean(value.annoClassId, emptyList(), false), value.args)
+        is AnnotationData -> AnnotationValue.create(
+            KotlinClassTypeBean(value.annoClassId, emptyList(), nullable = false, abbreviatedType = null),
+            value.args,
+        )
         null -> NullValue
         else -> error("Unsupported value $value")
     }
@@ -225,7 +231,10 @@ fun createConstantValue(value: ProtoBuf.Annotation.Argument.Value, nameResolver:
         ProtoBuf.Annotation.Argument.Value.Type.ANNOTATION -> {
             val args =
                 value.annotation.argumentList.associate { nameResolver.getName(it.nameId) to createConstantValue(it.value, nameResolver) }
-            AnnotationValue.create(KotlinClassTypeBean(nameResolver.getClassId(value.annotation.id), emptyList(), false), args)
+            AnnotationValue.create(
+                KotlinClassTypeBean(nameResolver.getClassId(value.annotation.id), emptyList(), nullable = false, abbreviatedType = null),
+                args,
+            )
         }
         ProtoBuf.Annotation.Argument.Value.Type.ARRAY -> ArrayValue(
             value.arrayElementList.map { createConstantValue(it, nameResolver) }
