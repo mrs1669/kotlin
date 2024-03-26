@@ -88,6 +88,13 @@ private fun appendTypeInfo(builder: StringBuilder, typeBean: KotlinTypeBean) {
             if (typeBean.nullable) {
                 builder.append("?")
             }
+
+            val abbreviatedType = typeBean.abbreviatedType
+            if (abbreviatedType != null) {
+                builder.append(" (abbreviatedType: ")
+                appendTypeInfo(builder, abbreviatedType)
+                builder.append(")")
+            }
         }
         is KotlinTypeParameterTypeBean -> {
             builder.append(typeBean.typeParameterName)
