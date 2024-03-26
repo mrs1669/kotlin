@@ -5,6 +5,7 @@
 
 package org.jetbrains.kotlin.konan.test.blackbox.support.compilation
 
+import org.jetbrains.kotlin.incremental.createDirectory
 import org.jetbrains.kotlin.klib.PartialLinkageTestUtils
 import org.jetbrains.kotlin.konan.target.HostManager
 import org.jetbrains.kotlin.konan.target.KonanTarget
@@ -118,6 +119,7 @@ private fun progressCallback(version: String) = { url: String, currentBytes: Lon
 }
 
 private fun extractCompiler(archive: File, unpackedFolderName: String, targetDirectory: File) {
+    konanDirectory.createDirectory() // archive extract may fail if directory doesn't exist
     DependencyExtractor().extract(archive, konanDirectory, ArchiveType.systemDefault)
     val unpackedDir = File(konanDirectory, unpackedFolderName)
     unpackedDir.renameTo(targetDirectory)
