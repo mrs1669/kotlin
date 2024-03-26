@@ -136,7 +136,7 @@ internal class DescriptorRendererImpl(
 
     private fun StringBuilder.renderAbbreviatedTypeComment(abbreviated: AbbreviatedType) {
         renderInBlockComment {
-            append("= ")
+            append("typealias ")
             renderNormalizedTypeAsIs(abbreviated.abbreviation)
         }
     }
