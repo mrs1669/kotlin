@@ -5,14 +5,14 @@
 
 package org.jetbrains.sir.passes
 
-import org.jetbrains.kotlin.analysis.api.calls.KtCall
 import org.jetbrains.kotlin.analysis.api.symbols.KtCallableSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KtClassOrObjectSymbol
 import org.jetbrains.kotlin.sir.*
 import org.jetbrains.kotlin.sir.builder.buildEnum
+import org.jetbrains.kotlin.sir.builder.buildExtension
 import org.jetbrains.kotlin.sir.builder.buildModule
+import org.jetbrains.kotlin.sir.providers.source.KotlinSource
 import org.jetbrains.kotlin.sir.visitors.SirTransformer
-import org.jetbrains.sir.passes.builder.KotlinSource
 
 /**
  * Pass that for every occurring declaration in package x.y.z generates a mirroring type scope and puts it there.
@@ -66,12 +66,23 @@ public class SirInflatePackagesPass : SirModulePass {
             }
 
             val additions = data.root.reduce { path, declarations, children ->
-                buildEnum {
+                val enum = buildEnum {
                     origin = SirOrigin.Namespace(path.drop(1))
                     name = path.last()
+
                     this.declarations += children
-                    this.declarations += declarations
+                    if (path.singleOrNull() == "") {
+                        this.declarations += declarations
+                    }
                 }
+                if (declarations.isNotEmpty() && path.singleOrNull() != "") {
+                    this.declarations += buildExtension {
+                        extendedType = SirNominalType(enum)
+                        this.declarations += declarations
+                    }
+                }
+
+                enum
             }
 
             declarations += additions.declarations
@@ -87,15 +98,15 @@ private fun SirDeclarationContainer.fixParents() = declarations
     .forEach(SirDeclarationContainer::fixParents)
 
 private fun KotlinSource.getPackagePath(): List<String> {
-    val fqName = when (symbol) {
+    val fqName = when (val ktSymbol = this.symbol) {
         is KtCallableSymbol -> {
-            symbol.callableIdIfNonLocal?.packageName
+            ktSymbol.callableIdIfNonLocal?.packageName
         }
         is KtClassOrObjectSymbol -> {
-            symbol.classIdIfNonLocal?.packageFqName
+            ktSymbol.classIdIfNonLocal?.packageFqName
         }
         else ->
-            TODO("encountered unknown origin: $symbol. This exception should be reworked during KT-65980")
+            TODO("encountered unknown origin: $ktSymbol. This exception should be reworked during KT-65980")
     }
     return fqName?.pathSegments()
         ?.map { it.toString() }

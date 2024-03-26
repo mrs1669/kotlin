@@ -343,6 +343,11 @@ sealed interface KtFirDiagnostic<PSI : PsiElement> : KtDiagnosticWithPsi<PSI> {
         val type: KtType
     }
 
+    interface MissingDependencyClassInExpressionType : KtFirDiagnostic<PsiElement> {
+        override val diagnosticClass get() = MissingDependencyClassInExpressionType::class
+        val type: KtType
+    }
+
     interface MissingDependencySuperclass : KtFirDiagnostic<PsiElement> {
         override val diagnosticClass get() = MissingDependencySuperclass::class
         val missingType: KtType
@@ -2810,6 +2815,11 @@ sealed interface KtFirDiagnostic<PSI : PsiElement> : KtDiagnosticWithPsi<PSI> {
 
     interface CapturedMemberValInitialization : KtFirDiagnostic<KtExpression> {
         override val diagnosticClass get() = CapturedMemberValInitialization::class
+        val property: KtVariableSymbol
+    }
+
+    interface NonInlineMemberValInitialization : KtFirDiagnostic<KtExpression> {
+        override val diagnosticClass get() = NonInlineMemberValInitialization::class
         val property: KtVariableSymbol
     }
 

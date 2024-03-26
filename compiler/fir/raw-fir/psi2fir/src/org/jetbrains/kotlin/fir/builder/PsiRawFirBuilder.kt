@@ -1313,7 +1313,7 @@ open class PsiRawFirBuilder(
                                     declaration,
                                     destructuringContainerVar,
                                     tmpVariable = false,
-                                    localEntries = false,
+                                    forceLocal = false,
                                 ) {
                                     configureScriptDestructuringDeclarationEntry(it, destructuringContainerVar)
                                 }
@@ -1331,7 +1331,7 @@ open class PsiRawFirBuilder(
                     setup()
                     if (sourceFile != null) {
                         for (configurator in baseSession.extensionService.scriptConfigurators) {
-                            with(configurator) { configure(sourceFile) }
+                            with(configurator) { configure(sourceFile, context) }
                         }
                     }
                 }
@@ -1882,7 +1882,7 @@ open class PsiRawFirBuilder(
                             multiDeclaration,
                             multiParameter,
                             tmpVariable = false,
-                            localEntries = true,
+                            forceLocal = true,
                         )
                         multiParameter
                     } else {
@@ -2038,7 +2038,9 @@ open class PsiRawFirBuilder(
                 this@PsiRawFirBuilder.context.calleeNamesForLambda += null
 
                 val expression = buildOrLazyExpression(null) {
-                    initializer.toFirExpression("Should have initializer")
+                    withForcedLocalContext {
+                        initializer.toFirExpression("Should have initializer")
+                    }
                 }
 
                 this@PsiRawFirBuilder.context.calleeNamesForLambda.removeLast()
@@ -2801,7 +2803,7 @@ open class PsiRawFirBuilder(
                                 multiDeclaration = multiDeclaration,
                                 container = firLoopParameter,
                                 tmpVariable = true,
-                                localEntries = true,
+                                forceLocal = true,
                             )
                         } else {
                             blockBuilder.statements.add(firLoopParameter)
@@ -3186,7 +3188,6 @@ open class PsiRawFirBuilder(
                 multiDeclaration,
                 baseVariable,
                 tmpVariable = true,
-                localEntries = true,
             )
         }
 

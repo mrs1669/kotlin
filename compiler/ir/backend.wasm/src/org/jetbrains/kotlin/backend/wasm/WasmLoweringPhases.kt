@@ -18,31 +18,28 @@ import org.jetbrains.kotlin.ir.backend.js.lower.*
 import org.jetbrains.kotlin.ir.backend.js.lower.coroutines.AddContinuationToFunctionCallsLowering
 import org.jetbrains.kotlin.ir.backend.js.lower.coroutines.JsSuspendFunctionsLowering
 import org.jetbrains.kotlin.ir.backend.js.lower.inline.RemoveInlineDeclarationsWithReifiedTypeParametersLowering
-import org.jetbrains.kotlin.ir.backend.wasm.lower.generateMainFunctionCalls
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
-import org.jetbrains.kotlin.ir.inline.FunctionInlining
 import org.jetbrains.kotlin.ir.interpreter.IrInterpreterConfiguration
-import org.jetbrains.kotlin.ir.util.patchDeclarationParents
 import org.jetbrains.kotlin.platform.WasmPlatform
 import org.jetbrains.kotlin.platform.toTargetPlatform
 
 private fun List<CompilerPhase<WasmBackendContext, IrModuleFragment, IrModuleFragment>>.toCompilerPhase() =
     reduce { acc, lowering -> acc.then(lowering) }
 
-private val validateIrBeforeLowering = makeCustomPhase<WasmBackendContext>(
-    { context, module -> validationCallback(context, module) },
+private val validateIrBeforeLowering = makeIrModulePhase(
+    ::IrValidationPhase,
     name = "ValidateIrBeforeLowering",
     description = "Validate IR before lowering"
 )
 
-private val validateIrAfterLowering = makeCustomPhase<WasmBackendContext>(
-    { context, module -> validationCallback(context, module) },
+private val validateIrAfterLowering = makeIrModulePhase(
+    ::IrValidationPhase,
     name = "ValidateIrAfterLowering",
     description = "Validate IR after lowering"
 )
 
-private val generateTests = makeCustomPhase<WasmBackendContext>(
-    { context, module -> generateWasmTests(context, module) },
+private val generateTests = makeIrModulePhase(
+    ::GenerateWasmTests,
     name = "GenerateTests",
     description = "Generates code to execute kotlin.test cases"
 )
@@ -132,16 +129,8 @@ private val wrapInlineDeclarationsWithReifiedTypeParametersPhase = makeIrModuleP
     description = "Wrap inline declarations with reified type parameters"
 )
 
-private val functionInliningPhase = makeCustomPhase<WasmBackendContext>(
-    { context, module ->
-        FunctionInlining(
-            context = context,
-            inlineFunctionResolver = WasmInlineFunctionResolver(context),
-            innerClassesSupport = context.innerClassesSupport,
-            insertAdditionalImplicitCasts = true,
-        ).inline(module)
-        module.patchDeclarationParents()
-    },
+private val functionInliningPhase = makeIrModulePhase(
+    ::WasmFunctionInlining,
     name = "FunctionInliningPhase",
     description = "Perform function inlining",
     prerequisite = setOf(
@@ -358,8 +347,8 @@ private val addContinuationToFunctionCallsLoweringPhase = makeIrModulePhase(
     )
 )
 
-private val addMainFunctionCallsLowering = makeCustomPhase(
-    ::generateMainFunctionCalls,
+private val addMainFunctionCallsLowering = makeIrModulePhase(
+    ::GenerateMainFunctionCalls,
     name = "GenerateMainFunctionCalls",
     description = "Generate main function calls into start function",
 )
@@ -423,10 +412,8 @@ private val initializersCleanupLoweringPhase = makeIrModulePhase(
     prerequisite = setOf(initializersLoweringPhase)
 )
 
-private val excludeDeclarationsFromCodegenPhase = makeCustomPhase<WasmBackendContext>(
-    { context, module ->
-        excludeDeclarationsFromCodegen(context, module)
-    },
+private val excludeDeclarationsFromCodegenPhase = makeIrModulePhase(
+    ::ExcludeDeclarationsFromCodegen,
     name = "ExcludeDeclarationsFromCodegen",
     description = "Move excluded declarations to separate place"
 )
@@ -512,6 +499,13 @@ private val objectDeclarationLoweringPhase = makeIrModulePhase(
     name = "ObjectDeclarationLowering",
     description = "Create lazy object instance generator functions",
     prerequisite = setOf(enumClassCreateInitializerLoweringPhase, staticCallableReferenceLoweringPhase)
+)
+
+private val invokeStaticInitializersPhase = makeIrModulePhase(
+    ::InvokeStaticInitializersLowering,
+    name = "InvokeStaticInitializersLowering",
+    description = "Invoke companion object's initializers from companion object in object constructor",
+    prerequisite = setOf(objectDeclarationLoweringPhase)
 )
 
 private val objectUsageLoweringPhase = makeIrModulePhase(
@@ -753,6 +747,7 @@ val loweringList = listOf(
     builtInsLoweringPhase,
 
     virtualDispatchReceiverExtractionPhase,
+    invokeStaticInitializersPhase,
     staticMembersLoweringPhase,
     inlineObjectsWithPureInitializationLoweringPhase,
     validateIrAfterLowering,

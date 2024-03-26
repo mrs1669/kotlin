@@ -53,6 +53,12 @@ public class FirIdeNormalAnalysisLibrarySourceModuleReferenceResolveTestGenerate
   }
 
   @Test
+  @TestMetadata("AnnotationFromJava.kt")
+  public void testAnnotationFromJava() {
+    runTest("analysis/analysis-api/testData/referenceResolve/AnnotationFromJava.kt");
+  }
+
+  @Test
   @TestMetadata("AnnotationInsideFunction.kt")
   public void testAnnotationInsideFunction() {
     runTest("analysis/analysis-api/testData/referenceResolve/AnnotationInsideFunction.kt");
@@ -668,6 +674,12 @@ public class FirIdeNormalAnalysisLibrarySourceModuleReferenceResolveTestGenerate
   @TestMetadata("TypeAliasRHS.kt")
   public void testTypeAliasRHS() {
     runTest("analysis/analysis-api/testData/referenceResolve/TypeAliasRHS.kt");
+  }
+
+  @Test
+  @TestMetadata("UnresolvedCallArgument.kt")
+  public void testUnresolvedCallArgument() {
+    runTest("analysis/analysis-api/testData/referenceResolve/UnresolvedCallArgument.kt");
   }
 
   @Test

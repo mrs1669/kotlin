@@ -395,6 +395,12 @@ internal class MissingDependencyClassImpl(
     token: KtLifetimeToken,
 ) : KtAbstractFirDiagnostic<PsiElement>(firDiagnostic, token), KtFirDiagnostic.MissingDependencyClass
 
+internal class MissingDependencyClassInExpressionTypeImpl(
+    override val type: KtType,
+    firDiagnostic: KtPsiDiagnostic,
+    token: KtLifetimeToken,
+) : KtAbstractFirDiagnostic<PsiElement>(firDiagnostic, token), KtFirDiagnostic.MissingDependencyClassInExpressionType
+
 internal class MissingDependencySuperclassImpl(
     override val missingType: KtType,
     override val declarationType: KtType,
@@ -3386,6 +3392,12 @@ internal class CapturedMemberValInitializationImpl(
     firDiagnostic: KtPsiDiagnostic,
     token: KtLifetimeToken,
 ) : KtAbstractFirDiagnostic<KtExpression>(firDiagnostic, token), KtFirDiagnostic.CapturedMemberValInitialization
+
+internal class NonInlineMemberValInitializationImpl(
+    override val property: KtVariableSymbol,
+    firDiagnostic: KtPsiDiagnostic,
+    token: KtLifetimeToken,
+) : KtAbstractFirDiagnostic<KtExpression>(firDiagnostic, token), KtFirDiagnostic.NonInlineMemberValInitialization
 
 internal class SetterProjectedOutImpl(
     override val property: KtVariableSymbol,

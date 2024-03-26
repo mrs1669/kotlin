@@ -3556,6 +3556,12 @@ public class FirLightTreeDiagnosticsTestGenerated extends AbstractFirLightTreeDi
       }
 
       @Test
+      @TestMetadata("postfixPrefixIncrementDecrement.kt")
+      public void testPostfixPrefixIncrementDecrement() {
+        runTest("compiler/fir/analysis-tests/testData/resolve/inference/postfixPrefixIncrementDecrement.kt");
+      }
+
+      @Test
       @TestMetadata("receiverWithCapturedType.kt")
       public void testReceiverWithCapturedType() {
         runTest("compiler/fir/analysis-tests/testData/resolve/inference/receiverWithCapturedType.kt");
@@ -4924,6 +4930,12 @@ public class FirLightTreeDiagnosticsTestGenerated extends AbstractFirLightTreeDi
         @TestMetadata("mixingImplicitAndExplicitReceivers.kt")
         public void testMixingImplicitAndExplicitReceivers() {
           runTest("compiler/fir/analysis-tests/testData/resolve/smartcasts/receivers/mixingImplicitAndExplicitReceivers.kt");
+        }
+
+        @Test
+        @TestMetadata("smartCastingExplicitReceiver.kt")
+        public void testSmartCastingExplicitReceiver() {
+          runTest("compiler/fir/analysis-tests/testData/resolve/smartcasts/receivers/smartCastingExplicitReceiver.kt");
         }
 
         @Test

@@ -15,6 +15,7 @@ dependencies {
     compileOnly(kotlinStdlib())
 
     api(project(":native:swift:sir"))
+    api(project(":native:swift:sir-providers"))
 
     api(project(":compiler:psi"))
     api(project(":analysis:analysis-api"))
