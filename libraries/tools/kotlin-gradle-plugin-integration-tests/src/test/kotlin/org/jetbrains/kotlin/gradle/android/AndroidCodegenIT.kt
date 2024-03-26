@@ -13,13 +13,7 @@ import org.junit.jupiter.api.condition.OS
 
 @DisplayName("codegen tests on android")
 @AndroidTestVersions(minVersion = TestVersions.AGP.AGP_82, maxVersion = TestVersions.AGP.AGP_82)
-/*
- * Non-virtualized runners are necessary.
- * This build utilizes the Android Emulator to execute codegen tests,
- * requiring a VM hypervisor for optimal performance.
- * Nested virtualization on CI runners except physical Macs fails.
- */
-@OsCondition(enabledOnCI = [OS.MAC])
+@OsCondition(enabledOnCI = [OS.MAC, OS.LINUX])
 @AndroidCodegenTests
 class AndroidCodegenIT : KGPBaseTest() {
     @GradleAndroidTest
@@ -33,8 +27,12 @@ class AndroidCodegenIT : KGPBaseTest() {
             gradleVersion,
             buildOptions = defaultBuildOptions.copy(
                 androidVersion = agpVersion,
-                freeArgs = listOf("-Pandroid.useAndroidX=true", "-Pandroid.experimental.testOptions.managedDevices.setupTimeoutMinutes=0"),
-                logLevel = LogLevel.LIFECYCLE
+                freeArgs = listOf(
+                    "-Pandroid.useAndroidX=true",
+                    "-Pandroid.experimental.testOptions.managedDevices.setupTimeoutMinutes=0",
+                    "-Pandroid.testoptions.manageddevices.emulator.gpu=swiftshader_indirect"
+                ),
+                logLevel = LogLevel.INFO
             ),
             enableGradleDebug = false,
             buildJdk = jdkVersion.location
