@@ -20,7 +20,7 @@ internal class SirStructImpl(
     override val visibility: SirVisibility,
     override var documentation: String?,
     override val name: String,
-    override val declarations: MutableList<SirDeclaration>,
+    override var declarations: MutableList<SirDeclaration>,
 ) : SirStruct() {
     override lateinit var parent: SirDeclarationParent
 

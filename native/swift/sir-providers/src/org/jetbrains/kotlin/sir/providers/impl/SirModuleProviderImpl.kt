@@ -24,19 +24,24 @@ public class SirModuleProviderImpl(
     private val sirSession: SirSession,
 ) : SirModuleProvider {
 
+    private val seenModule: MutableMap<KtModule, SirModule> = mutableMapOf()
+
     override fun KtModule.sirModule(): SirModule = withSirAnalyse(sirSession, ktAnalysisSession) {
-        buildModule {
-            name = moduleName()
-            // imports should be reworked - KT-66727
-            declarations += buildImport {
-                moduleName = bridgeModuleName
+        if (seenModule.containsKey(this@sirModule) == false) {
+            seenModule[this@sirModule] = buildModule {
+                name = moduleName()
+                // imports should be reworked - KT-66727
+                declarations += buildImport {
+                    moduleName = bridgeModuleName
+                }
+                declarations += buildImport {
+                    moduleName = KOTLIN_RUNTIME_MODULE_NAME
+                }
+            }.apply {
+                declarations.forEach { it.parent = this }
             }
-            declarations += buildImport {
-                moduleName = KOTLIN_RUNTIME_MODULE_NAME
-            }
-        }.apply {
-            declarations.forEach { it.parent = this }
         }
+        seenModule.get(this@sirModule)!!
     }
 
     // TODO: Postprocess to make sure that module name is a correct Swift name

@@ -17,7 +17,7 @@ import org.jetbrains.kotlin.sir.visitors.SirTransformer
 import org.jetbrains.kotlin.sir.visitors.SirVisitor
 
 internal class SirModuleImpl(
-    override val declarations: MutableList<SirDeclaration>,
+    override var declarations: MutableList<SirDeclaration>,
     override val name: String,
 ) : SirModule() {
 

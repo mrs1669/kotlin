@@ -6,6 +6,7 @@
 package org.jetbrains.kotlin.sir.util
 
 import org.jetbrains.kotlin.sir.*
+import org.jetbrains.kotlin.sir.builder.*
 
 val SirCallable.allParameters: List<SirParameter>
     get() = when (this) {
@@ -39,3 +40,10 @@ val SirVariable.accessors: List<SirAccessor>
 val SirParameter.name: String? get() = parameterName ?: argumentName
 
 val SirType.isVoid: Boolean get() = this is SirNominalType && this.type == SirSwiftModule.void
+
+fun SirDeclaration.setParent(parent: SirDeclarationParent) {
+    this.parent = parent
+    if (parent is SirDeclarationContainer && !parent.declarations.contains(this)) {
+        parent.declarations += this
+    }
+}

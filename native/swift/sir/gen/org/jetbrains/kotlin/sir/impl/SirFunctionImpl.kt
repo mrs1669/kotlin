@@ -20,7 +20,7 @@ internal class SirFunctionImpl(
     override val kind: SirCallableKind,
     override var body: SirFunctionBody?,
     override val name: String,
-    override val parameters: MutableList<SirParameter>,
+    override var parameters: MutableList<SirParameter>,
     override val returnType: SirType,
     override var documentation: String?,
 ) : SirFunction() {

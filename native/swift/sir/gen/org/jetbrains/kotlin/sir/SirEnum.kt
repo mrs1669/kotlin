@@ -20,8 +20,8 @@ abstract class SirEnum : SirDeclarationContainer(), SirNamedDeclaration {
     abstract override var documentation: String?
     abstract override var parent: SirDeclarationParent
     abstract override val name: String
-    abstract override val declarations: List<SirDeclaration>
-    abstract val cases: List<SirEnumCase>
+    abstract override var declarations: MutableList<SirDeclaration>
+    abstract var cases: MutableList<SirEnumCase>
 
     override fun <R, D> accept(visitor: SirVisitor<R, D>, data: D): R =
         visitor.visitEnum(this, data)

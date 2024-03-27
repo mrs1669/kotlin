@@ -12,31 +12,35 @@ import org.jetbrains.kotlin.sir.SirModule
 import org.jetbrains.kotlin.sir.SirOrigin
 import org.jetbrains.kotlin.sir.builder.buildEnum
 import org.jetbrains.kotlin.sir.providers.SirEnumGenerator
+import org.jetbrains.kotlin.sir.util.setParent
 
 // TODO: Handle different modules
 // Package Inflator should be rewritten to use this - during 3.1 of KT-66639
 public class SirEnumGeneratorImpl : SirEnumGenerator {
 
+    private val createdEnums: MutableMap<String, SirEnum> = mutableMapOf()
+
     override fun FqName.sirPackageEnum(module: SirModule): SirEnum {
         require(!this.isRoot)
         if (this.parent().isRoot) {
             return createEnum(this@sirPackageEnum).also {
-                it.parent = module
-                (module.declarations as MutableList<SirDeclaration>) += it
+                it.setParent(module)
             }
         } else {
             val parent = this.parent().sirPackageEnum(module)
             return createEnum(this@sirPackageEnum).also {
-                it.parent = parent
-                (parent.declarations as MutableList<SirDeclaration>) += it
+                it.setParent(parent)
             }
         }
     }
 
     private fun createEnum(fqName: FqName): SirEnum {
-        return buildEnum {
-            origin = SirOrigin.Namespace(fqName.pathSegments().map { it.asString() })
-            name = fqName.pathSegments().last().asString()
+        if (!createdEnums.containsKey(fqName.toString())) {
+            createdEnums[fqName.toString()] = buildEnum {
+                origin = SirOrigin.Namespace(fqName.pathSegments().map { it.asString() })
+                name = fqName.pathSegments().last().asString()
+            }
         }
+        return createdEnums[fqName.toString()]!!
     }
 }

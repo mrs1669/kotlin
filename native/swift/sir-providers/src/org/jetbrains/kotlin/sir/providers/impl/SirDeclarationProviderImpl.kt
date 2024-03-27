@@ -15,28 +15,43 @@ import org.jetbrains.kotlin.sir.providers.SirDeclarationProvider
 import org.jetbrains.kotlin.sir.providers.SirSession
 import org.jetbrains.kotlin.sir.providers.source.KotlinSource
 import org.jetbrains.kotlin.sir.providers.utils.withSirAnalyse
+import org.jetbrains.kotlin.sir.util.setParent
 
 public class SirDeclarationProviderImpl(
     private val ktAnalysisSession: KtAnalysisSession,
     private val sirSession: SirSession,
 ) : SirDeclarationProvider {
 
+    private val visitedDeclarations: MutableMap<KtDeclarationSymbol, SirDeclaration> = mutableMapOf()
+
     override fun KtDeclarationSymbol.sirDeclaration(): SirDeclaration = withSirAnalyse(sirSession, ktAnalysisSession) {
-        when (val ktSymbol = this@sirDeclaration) {
-            is KtNamedClassOrObjectSymbol -> {
-                ktSymbol.sirClass()
+        if (!visitedDeclarations.containsKey(this@sirDeclaration)) {
+            visitedDeclarations[this@sirDeclaration] = when (val ktSymbol = this@sirDeclaration) {
+                is KtNamedClassOrObjectSymbol -> {
+                    ktSymbol.sirClass()
+                }
+                is KtConstructorSymbol -> {
+                    ktSymbol.sirInit()
+                }
+                is KtFunctionLikeSymbol -> {
+                    ktSymbol.sirFunction()
+                }
+                is KtVariableSymbol -> {
+                    ktSymbol.sirVariable()
+                }
+                else -> TODO("encountered unknown symbol type - $ktSymbol. Error system should be reworked KT-65980")
+            }.apply {
+                setParent(getParent())
             }
-            is KtConstructorSymbol -> {
-                ktSymbol.sirInit()
+            // hack: to touch all children only after the class is already cached.
+            // Will be removed for lazy implementation, can also be solved by using some kind of deferred/promise/future implementation
+            if (this@sirDeclaration is KtNamedClassOrObjectSymbol) {
+                val symbol = this@sirDeclaration
+                symbol.getCombinedDeclaredMemberScope().extractDeclarations()
+                    .toList() // without `toList` actually prints nothing.
             }
-            is KtFunctionLikeSymbol -> {
-                ktSymbol.sirFunction()
-            }
-            is KtVariableSymbol -> {
-                ktSymbol.sirVariable()
-            }
-            else -> TODO("encountered unknown symbol type - $ktSymbol. Error system should be reworked KT-65980")
         }
+        visitedDeclarations[this@sirDeclaration]!!
     }
 
     context(KtAnalysisSession, SirSession)
@@ -45,12 +60,10 @@ public class SirDeclarationProviderImpl(
         name = symbol.name.asString()
         origin = KotlinSource(symbol)
 
-        declarations += symbol.getCombinedDeclaredMemberScope().extractDeclarations()
+//        declarations += symbol.getCombinedDeclaredMemberScope().extractDeclarations()
 
         documentation = symbol.documentation()
 
-    }.also { resultedClass ->
-        resultedClass.declarations.forEach { decl -> decl.parent = resultedClass }
     }
 
     context(KtAnalysisSession, SirSession)

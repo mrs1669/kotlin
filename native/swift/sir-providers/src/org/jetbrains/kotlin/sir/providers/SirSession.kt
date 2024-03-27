@@ -25,6 +25,7 @@ import org.jetbrains.kotlin.sir.*
 public interface SirSession :
     SirDeclarationNamer,
     SirDeclarationProvider,
+    SirParentProvider,
     SirModuleProvider,
     SirEnumGenerator,
     SirTypeProvider,
@@ -36,6 +37,7 @@ public interface SirSession :
 
     public val declarationNamer: SirDeclarationNamer
     public val declarationProvider: SirDeclarationProvider
+    public val parentProvider: SirParentProvider
     public val moduleProvider: SirModuleProvider
     public val enumGenerator: SirEnumGenerator
     public val typeProvider: SirTypeProvider
@@ -49,6 +51,8 @@ public interface SirSession :
     override fun KtDeclarationSymbol.sirDeclarationName(): String = with(declarationNamer) { this@sirDeclarationName.sirDeclarationName() }
 
     override fun KtDeclarationSymbol.sirDeclaration(): SirDeclaration = with(declarationProvider) { this@sirDeclaration.sirDeclaration() }
+
+    override fun KtDeclarationSymbol.getParent(): SirDeclarationParent = with(parentProvider) { this@getParent.getParent() }
 
     override fun KtModule.sirModule(): SirModule = with(moduleProvider) { this@sirModule.sirModule() }
 
@@ -79,6 +83,13 @@ public interface SirDeclarationNamer {
  */
 public interface SirDeclarationProvider {
     public fun KtDeclarationSymbol.sirDeclaration(): SirDeclaration
+}
+
+/**
+ * Lookup for SirParent for any kotlin declaration
+ */
+public interface SirParentProvider {
+    public fun KtDeclarationSymbol.getParent(): SirDeclarationParent
 }
 
 /**

@@ -68,7 +68,7 @@ class ListField(
         get() = super.typeRef
 
     override val listType: ClassRef<PositionTypeParameterRef>
-        get() = StandardTypes.list
+        get() = if (isMutable) StandardTypes.mutableList else StandardTypes.list
 
     override fun internalCopy() = ListField(name, baseType, isMutable, isChild)
 
