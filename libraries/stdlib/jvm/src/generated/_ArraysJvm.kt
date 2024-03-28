@@ -574,7 +574,7 @@ public actual inline fun <T> Array<out T>?.contentDeepToString(): String {
  * @param other the array to compare with this array.
  * @return `true` if the two arrays are structurally equal, `false` otherwise.
  * 
- * @sample samples.collections.Arrays.ContentOperations.contentEquals
+ * @sample samples.collections.Arrays.ContentOperations.arrayContentEquals
  */
 @SinceKotlin("1.4")
 @kotlin.internal.InlineOnly
@@ -592,7 +592,7 @@ public actual inline infix fun <T> Array<out T>?.contentEquals(other: Array<out 
  * @param other the array to compare with this array.
  * @return `true` if the two arrays are structurally equal, `false` otherwise.
  * 
- * @sample samples.collections.Arrays.ContentOperations.contentEquals
+ * @sample samples.collections.Arrays.ContentOperations.intArrayContentEquals
  */
 @SinceKotlin("1.4")
 @kotlin.internal.InlineOnly
@@ -610,7 +610,7 @@ public actual inline infix fun ByteArray?.contentEquals(other: ByteArray?): Bool
  * @param other the array to compare with this array.
  * @return `true` if the two arrays are structurally equal, `false` otherwise.
  * 
- * @sample samples.collections.Arrays.ContentOperations.contentEquals
+ * @sample samples.collections.Arrays.ContentOperations.intArrayContentEquals
  */
 @SinceKotlin("1.4")
 @kotlin.internal.InlineOnly
@@ -628,7 +628,7 @@ public actual inline infix fun ShortArray?.contentEquals(other: ShortArray?): Bo
  * @param other the array to compare with this array.
  * @return `true` if the two arrays are structurally equal, `false` otherwise.
  * 
- * @sample samples.collections.Arrays.ContentOperations.contentEquals
+ * @sample samples.collections.Arrays.ContentOperations.intArrayContentEquals
  */
 @SinceKotlin("1.4")
 @kotlin.internal.InlineOnly
@@ -646,7 +646,7 @@ public actual inline infix fun IntArray?.contentEquals(other: IntArray?): Boolea
  * @param other the array to compare with this array.
  * @return `true` if the two arrays are structurally equal, `false` otherwise.
  * 
- * @sample samples.collections.Arrays.ContentOperations.contentEquals
+ * @sample samples.collections.Arrays.ContentOperations.intArrayContentEquals
  */
 @SinceKotlin("1.4")
 @kotlin.internal.InlineOnly
@@ -666,7 +666,7 @@ public actual inline infix fun LongArray?.contentEquals(other: LongArray?): Bool
  * @param other the array to compare with this array.
  * @return `true` if the two arrays are structurally equal, `false` otherwise.
  * 
- * @sample samples.collections.Arrays.ContentOperations.contentEquals
+ * @sample samples.collections.Arrays.ContentOperations.doubleArrayContentEquals
  */
 @SinceKotlin("1.4")
 @kotlin.internal.InlineOnly
@@ -686,7 +686,7 @@ public actual inline infix fun FloatArray?.contentEquals(other: FloatArray?): Bo
  * @param other the array to compare with this array.
  * @return `true` if the two arrays are structurally equal, `false` otherwise.
  * 
- * @sample samples.collections.Arrays.ContentOperations.contentEquals
+ * @sample samples.collections.Arrays.ContentOperations.doubleArrayContentEquals
  */
 @SinceKotlin("1.4")
 @kotlin.internal.InlineOnly
@@ -704,7 +704,7 @@ public actual inline infix fun DoubleArray?.contentEquals(other: DoubleArray?): 
  * @param other the array to compare with this array.
  * @return `true` if the two arrays are structurally equal, `false` otherwise.
  * 
- * @sample samples.collections.Arrays.ContentOperations.contentEquals
+ * @sample samples.collections.Arrays.ContentOperations.intArrayContentEquals
  */
 @SinceKotlin("1.4")
 @kotlin.internal.InlineOnly
@@ -722,7 +722,7 @@ public actual inline infix fun BooleanArray?.contentEquals(other: BooleanArray?)
  * @param other the array to compare with this array.
  * @return `true` if the two arrays are structurally equal, `false` otherwise.
  * 
- * @sample samples.collections.Arrays.ContentOperations.contentEquals
+ * @sample samples.collections.Arrays.ContentOperations.intArrayContentEquals
  */
 @SinceKotlin("1.4")
 @kotlin.internal.InlineOnly

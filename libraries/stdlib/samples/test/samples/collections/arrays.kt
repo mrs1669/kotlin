@@ -177,7 +177,7 @@ class Arrays {
         }
 
         @Sample
-        fun contentEquals() {
+        fun arrayContentEquals() {
             val array = arrayOf("apples", "oranges", "lime")
 
             // the same size and equal elements
@@ -188,6 +188,37 @@ class Arrays {
 
             // the elements at index 1 are not equal
             assertPrints(array.contentEquals(arrayOf("apples", "lime", "oranges")), "false")
+        }
+
+        @Sample
+        fun intArrayContentEquals() {
+            val array = intArrayOf(1, 2, 3)
+
+            // the same size and equal elements
+            assertPrints(array.contentEquals(intArrayOf(1, 2, 3)), "true")
+
+            // different size
+            assertPrints(array.contentEquals(intArrayOf(1, 2)), "false")
+
+            // the elements at index 1 are not equal
+            assertPrints(array.contentEquals(intArrayOf(1, 3, 2)), "false")
+        }
+
+        @Sample
+        fun doubleArrayContentEquals() {
+            val array = doubleArrayOf(1.0, Double.NaN, 0.0)
+
+            // the same size and equal elements, NaN is equal to NaN
+            assertPrints(array.contentEquals(doubleArrayOf(1.0, Double.NaN, 0.0)), "true")
+
+            // different size
+            assertPrints(array.contentEquals(doubleArrayOf(1.0, Double.NaN)), "false")
+
+            // the elements at index 2 are not equal, 0.0 is not equal to -0.0
+            assertPrints(array.contentEquals(doubleArrayOf(1.0, Double.NaN, -0.0)), "false")
+
+            // the elements at index 1 are not equal
+            assertPrints(array.contentEquals(doubleArrayOf(1.0, 0.0, Double.NaN)), "false")
         }
 
         @Sample

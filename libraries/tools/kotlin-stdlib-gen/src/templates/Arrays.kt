@@ -95,8 +95,12 @@ object ArrayOps : TemplateGroupBase() {
             Two arrays are considered structurally equal if they have the same size, and elements at corresponding indices are equal.
             """
         }
-        if (f == ArraysOfObjects || primitive?.isFloatingPoint() == true) {
-            val prefix = if (f == ArraysOfObjects) "For floating point numbers, this" else "This"
+
+        val isArrayOfObjects = f == ArraysOfObjects
+        val isArrayOfFloatingPoint = primitive?.isFloatingPoint() == true
+
+        if (isArrayOfObjects || isArrayOfFloatingPoint) {
+            val prefix = if (isArrayOfObjects) "For floating point numbers, this" else "This"
             doc {
                 doc + """Elements are compared for equality using the [equals][Any.equals] function.
                 $prefix means `NaN` is equal to itself and `-0.0` is not equal to `0.0`.
@@ -106,7 +110,7 @@ object ArrayOps : TemplateGroupBase() {
         doc {
             doc + nullabilityNote
         }
-        if (f == ArraysOfObjects) {
+        if (isArrayOfObjects) {
             doc {
                 doc + """
                 If the arrays contain nested arrays, use [contentDeepEquals] to recursively compare their elements.
@@ -119,7 +123,13 @@ object ArrayOps : TemplateGroupBase() {
             @return `true` if the two arrays are structurally equal, `false` otherwise.
             """
         }
-        sample("samples.collections.Arrays.ContentOperations.contentEquals")
+
+        val sampleMethod = when {
+            isArrayOfObjects -> "arrayContentEquals"
+            isArrayOfFloatingPoint -> "doubleArrayContentEquals"
+            else -> "intArrayContentEquals"
+        }
+        sample("samples.collections.Arrays.ContentOperations.$sampleMethod")
     }
 
     val f_contentEquals = fn("contentEquals(other: SELF)") {

@@ -3317,7 +3317,7 @@ public inline fun ShortArray.asUShortArray(): UShortArray {
  * @param other the array to compare with this array.
  * @return `true` if the two arrays are structurally equal, `false` otherwise.
  * 
- * @sample samples.collections.Arrays.ContentOperations.contentEquals
+ * @sample samples.collections.Arrays.ContentOperations.intArrayContentEquals
  */
 @SinceKotlin("1.4")
 @ExperimentalUnsignedTypes
@@ -3335,7 +3335,7 @@ public infix fun UIntArray?.contentEquals(other: UIntArray?): Boolean {
  * @param other the array to compare with this array.
  * @return `true` if the two arrays are structurally equal, `false` otherwise.
  * 
- * @sample samples.collections.Arrays.ContentOperations.contentEquals
+ * @sample samples.collections.Arrays.ContentOperations.intArrayContentEquals
  */
 @SinceKotlin("1.4")
 @ExperimentalUnsignedTypes
@@ -3353,7 +3353,7 @@ public infix fun ULongArray?.contentEquals(other: ULongArray?): Boolean {
  * @param other the array to compare with this array.
  * @return `true` if the two arrays are structurally equal, `false` otherwise.
  * 
- * @sample samples.collections.Arrays.ContentOperations.contentEquals
+ * @sample samples.collections.Arrays.ContentOperations.intArrayContentEquals
  */
 @SinceKotlin("1.4")
 @ExperimentalUnsignedTypes
@@ -3371,7 +3371,7 @@ public infix fun UByteArray?.contentEquals(other: UByteArray?): Boolean {
  * @param other the array to compare with this array.
  * @return `true` if the two arrays are structurally equal, `false` otherwise.
  * 
- * @sample samples.collections.Arrays.ContentOperations.contentEquals
+ * @sample samples.collections.Arrays.ContentOperations.intArrayContentEquals
  */
 @SinceKotlin("1.4")
 @ExperimentalUnsignedTypes
