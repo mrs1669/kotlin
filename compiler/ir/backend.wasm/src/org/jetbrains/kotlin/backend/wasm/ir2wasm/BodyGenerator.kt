@@ -178,7 +178,7 @@ class BodyGenerator(
      * ```wast
      * block $catch_block (BLOCK_TYPE)
      *     block $try_block (EXCEPTION_TYPE)
-     *         try_table catch IDX $try_block
+     *         try_table (EXCEPTION_TYPE) catch IDX $try_block
      *             TRANSLATED_RESULT_EXPRESSION
      *             br $catch_block
      *         end
@@ -816,11 +816,10 @@ class BodyGenerator(
     /**
      *
      * ```wast
-     * local $exnref
      * block $catch_block (TRANSLATED_CONTAINER_EXPRESSION_TYPE)
      *     block $catch_all_block (THROWABLE_TYPE)
      *         block $try_block
-     *             try_table catch_all_ref $try_block
+     *             try_table (THROWABLE_TYPE) catch_all_ref $try_block
      *                 TRANSLATED_CONTAINER_EXPRESSION
      *                 br $catch_block
      *             end
