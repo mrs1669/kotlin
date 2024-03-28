@@ -149,8 +149,11 @@ class ClosureAnnotator(irElement: IrElement, declaration: IrDeclaration) {
         fun seeType(type: IrType) {
             if (type !is IrSimpleType) return
             val classifier = type.classifier
-            if (classifier is IrTypeParameterSymbol && isExternal(classifier.owner) && capturedTypeParameters.add(classifier.owner))
+            if (classifier is IrTypeParameterSymbol && classifier.isBound && isExternal(classifier.owner)
+                && capturedTypeParameters.add(classifier.owner)
+            ) {
                 classifier.owner.superTypes.forEach(::seeType)
+            }
             type.arguments.forEach {
                 (it as? IrTypeProjection)?.type?.let(::seeType)
             }
