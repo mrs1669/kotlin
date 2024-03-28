@@ -21,42 +21,58 @@ internal fun SirModule.buildFunctionBridges(): List<BridgeRequest> {
     return BridgeGenerationPass.run(this)
 }
 
-private object BridgeGenerationPass : SirPass<SirElement, Nothing?, List<BridgeRequest>> {
-    override fun run(element: SirElement, data: Nothing?): List<BridgeRequest> {
+private object BridgeGenerationPass {
+    fun run(container: SirDeclarationContainer): List<BridgeRequest> {
         val requests = mutableListOf<BridgeRequest>()
-        element.accept(Visitor(requests))
+
+        requests.addAll(
+            container
+                .allCallables()
+                .filterIsInstance<SirFunction>()
+                .map { it.toBridgeRequest() }
+                .flatten()
+        )
+
+        requests.addAll(
+            container
+                .allVariables()
+                .map { it.toBridgeRequest() }
+                .flatten()
+        )
+
+        (container as? SirModule)?.let {
+            requests.addAll(container.allExtensions().flatMap { run(it) })
+        }
+        requests.addAll(container.allClasses().flatMap { run(it) })
+
         return requests.toList()
     }
 
-    private class Visitor(val requests: MutableList<BridgeRequest>) : SirVisitorVoid() {
+    private fun SirFunction.toBridgeRequest(): List<BridgeRequest> {
+        val fqName = ((origin as? KotlinSource)?.symbol as? KtFunctionLikeSymbol)
+            ?.callableIdIfNonLocal?.asSingleFqName()
+            ?.pathSegments()?.map { it.toString() }
+            ?: return emptyList()
 
-        override fun visitElement(element: SirElement) {
-            element.acceptChildren(this)
-        }
+        return listOfNotNull(
+            patchCallableBodyAndGenerateRequest(fqName)
+        )
+    }
 
-        override fun visitFunction(function: SirFunction) {
-            val fqName = ((function.origin as? KotlinSource)?.symbol as? KtFunctionLikeSymbol)
-                ?.callableIdIfNonLocal?.asSingleFqName()
-                ?.pathSegments()?.map { it.toString() }
-                ?: return
+    private fun SirVariable.toBridgeRequest(): List<BridgeRequest> {
+        val fqName = ((origin as? KotlinSource)?.symbol as? KtVariableLikeSymbol)
+            ?.callableIdIfNonLocal?.asSingleFqName()
+            ?.pathSegments()?.map { it.toString() }
+            ?: return emptyList()
 
-            requests.addIfNotNull(
-                function.patchCallableBodyAndGenerateRequest(fqName)
+        val res = mutableListOf<BridgeRequest>()
+        accessors.forEach {
+            res.addIfNotNull(
+                it.patchCallableBodyAndGenerateRequest(fqName)
             )
         }
 
-        override fun visitVariable(variable: SirVariable) {
-            val fqName = ((variable.origin as? KotlinSource)?.symbol as? KtVariableLikeSymbol)
-                ?.callableIdIfNonLocal?.asSingleFqName()
-                ?.pathSegments()?.map { it.toString() }
-                ?: return
-
-            variable.accessors.forEach {
-                requests.addIfNotNull(
-                    it.patchCallableBodyAndGenerateRequest(fqName)
-                )
-            }
-        }
+        return res.toList()
     }
 }
 
