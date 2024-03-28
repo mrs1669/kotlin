@@ -39585,6 +39585,12 @@ public class FirPsiOldFrontendDiagnosticsTestGenerated extends AbstractFirPsiDia
       }
 
       @Test
+      @TestMetadata("NonExhaustiveAfterSmartcast.kt")
+      public void testNonExhaustiveAfterSmartcast() {
+        runTest("compiler/testData/diagnostics/tests/when/NonExhaustiveAfterSmartcast.kt");
+      }
+
+      @Test
       @TestMetadata("NonExhaustiveBooleanNullable.kt")
       public void testNonExhaustiveBooleanNullable() {
         runTest("compiler/testData/diagnostics/tests/when/NonExhaustiveBooleanNullable.kt");
