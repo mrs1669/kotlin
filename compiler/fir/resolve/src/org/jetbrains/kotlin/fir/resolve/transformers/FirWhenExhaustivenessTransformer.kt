@@ -24,8 +24,10 @@ import org.jetbrains.kotlin.fir.expressions.impl.FirElseIfTrueCondition
 import org.jetbrains.kotlin.fir.reportEnumUsageInWhen
 import org.jetbrains.kotlin.fir.resolve.BodyResolveComponents
 import org.jetbrains.kotlin.fir.resolve.fullyExpandedType
+import org.jetbrains.kotlin.fir.resolve.lookupSuperTypes
 import org.jetbrains.kotlin.fir.resolve.providers.symbolProvider
 import org.jetbrains.kotlin.fir.symbols.FirBasedSymbol
+import org.jetbrains.kotlin.fir.symbols.impl.FirClassLikeSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirClassSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirRegularClassSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirVariableSymbol
@@ -78,6 +80,9 @@ class FirWhenExhaustivenessTransformer(private val bodyResolveComponents: BodyRe
                 }
                 if (isNotEmpty() && subjectType.isMarkedNullable) {
                     this.add(WhenOnNullableExhaustivenessChecker)
+                }
+                if (isEmpty()) {
+                    add(WhenSelfTypeExhaustivenessChecker)
                 }
             }
         }
@@ -422,5 +427,38 @@ private object WhenOnNothingExhaustivenessChecker : WhenExhaustivenessChecker() 
         destination: MutableCollection<WhenMissingCase>
     ) {
         // Nothing has no branches. The null case for `Nothing?` is handled by WhenOnNullableExhaustivenessChecker
+    }
+}
+
+private data object WhenSelfTypeExhaustivenessChecker : WhenExhaustivenessChecker() {
+    override fun isApplicable(subjectType: ConeKotlinType, session: FirSession): Boolean {
+        return true
+    }
+
+    override fun computeMissingCases(
+        whenExpression: FirWhenExpression,
+        subjectType: ConeKotlinType,
+        session: FirSession,
+        destination: MutableCollection<WhenMissingCase>,
+    ) {
+        val symbol = subjectType.toSymbol(session) as? FirClassLikeSymbol<*> ?: return
+        val acceptedTypes = mutableSetOf(symbol.toLookupTag())
+        lookupSuperTypes(symbol, lookupInterfaces = true, deep = true, session).mapTo(acceptedTypes) { it.lookupTag }
+
+        val checkedTypes = mutableSetOf<ConeKotlinType>()
+        whenExpression.accept(ConditionChecker, checkedTypes)
+
+        if (destination.isEmpty() && checkedTypes.none { (it.fullyExpandedType(session) as? ConeClassLikeType)?.lookupTag in acceptedTypes }) {
+            // If there are no branches which check for self-type or super-type, report Unknown
+            // missing case since we do not want to suggest this sort of check.
+            destination.add(WhenMissingCase.Unknown)
+        }
+    }
+
+    private object ConditionChecker : AbstractConditionChecker<MutableSet<ConeKotlinType>>() {
+        override fun visitTypeOperatorCall(typeOperatorCall: FirTypeOperatorCall, data: MutableSet<ConeKotlinType>) {
+            if (typeOperatorCall.operation != FirOperation.IS) return
+            data.add(typeOperatorCall.conversionTypeRef.coneType)
+        }
     }
 }
