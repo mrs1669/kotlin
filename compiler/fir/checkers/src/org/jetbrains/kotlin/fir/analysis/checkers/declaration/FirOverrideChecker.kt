@@ -9,6 +9,7 @@ import org.jetbrains.kotlin.KtFakeSourceElementKind
 import org.jetbrains.kotlin.KtRealSourceElementKind
 import org.jetbrains.kotlin.KtSourceElement
 import org.jetbrains.kotlin.builtins.StandardNames
+import org.jetbrains.kotlin.config.AnalysisFlags
 import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.descriptors.Visibilities
 import org.jetbrains.kotlin.diagnostics.DiagnosticReporter
@@ -493,7 +494,12 @@ sealed class FirOverrideChecker(mppKind: MppCheckerKind) : FirAbstractOverrideCh
     }
 
     private fun DiagnosticReporter.reportNothingToOverride(declaration: FirCallableSymbol<*>, context: CheckerContext) {
-        reportOn(declaration.source, FirErrors.NOTHING_TO_OVERRIDE, declaration, context)
+        val sourceSymbol = if (context.languageVersionSettings.getFlag(AnalysisFlags.stdlibCompilation) && declaration.source == null) {
+            declaration.containingClassLookupTag()?.toSymbol(context.session)
+        } else {
+            declaration
+        }
+        reportOn(sourceSymbol?.source, FirErrors.NOTHING_TO_OVERRIDE, declaration, context)
     }
 
     private fun DiagnosticReporter.reportOverridingFinalMember(
