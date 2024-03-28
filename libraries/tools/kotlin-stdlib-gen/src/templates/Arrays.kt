@@ -96,9 +96,10 @@ object ArrayOps : TemplateGroupBase() {
             """
         }
         if (f == ArraysOfObjects || primitive?.isFloatingPoint() == true) {
+            val prefix = if (f == ArraysOfObjects) "For floating point numbers, this" else "This"
             doc {
                 doc + """Elements are compared for equality using the [equals][Any.equals] function.
-                For floating point numbers, it means that `NaN` is equal to itself and `-0.0` is not equal to `0.0`.
+                $prefix means `NaN` is equal to itself and `-0.0` is not equal to `0.0`.
                 """
             }
         }
@@ -115,7 +116,7 @@ object ArrayOps : TemplateGroupBase() {
         doc {
             doc + """
             @param other the array to compare with this array.
-            @return `true` if both arrays are structurally equal, `false` otherwise.
+            @return `true` if the two arrays are structurally equal, `false` otherwise.
             """
         }
         sample("samples.collections.Arrays.ContentOperations.contentEquals")
@@ -184,7 +185,7 @@ object ArrayOps : TemplateGroupBase() {
             Two arrays are considered deeply equal if they have the same size, and elements at corresponding indices are deeply equal.
             That is, if two corresponding elements are nested arrays, they are also compared deeply.
             Elements of other types are compared for equality using the [equals][Any.equals] function.
-            For floating point numbers, it means that `NaN` is equal to itself and `-0.0` is not equal to `0.0`.
+            For floating point numbers, this means `NaN` is equal to itself and `-0.0` is not equal to `0.0`.
             """
         }
         doc {
@@ -195,7 +196,7 @@ object ArrayOps : TemplateGroupBase() {
             If any of the arrays contain themselves at any nesting level, the behavior is undefined.
 
             @param other the array to compare deeply with this array.
-            @return `true` if both arrays are deeply equal, `false` otherwise.
+            @return `true` if the two arrays are deeply equal, `false` otherwise.
             """
         }
         sample("samples.collections.Arrays.ContentOperations.contentDeepEquals")

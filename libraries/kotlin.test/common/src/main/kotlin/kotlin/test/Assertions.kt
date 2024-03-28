@@ -358,7 +358,7 @@ public fun assertContains(charSequence: CharSequence, regex: Regex, message: Str
  *
  * Two iterables are considered structurally equal if they have the same size, and elements at corresponding indices are equal.
  * Elements are compared for equality using the [equals][Any.equals] function.
- * For floating point numbers, it means that `NaN` is equal to itself and `-0.0` is not equal to `0.0`.
+ * For floating point numbers, this means `NaN` is equal to itself and `-0.0` is not equal to `0.0`.
  *
  * The iterables are also considered equal if both are `null`.
  */
@@ -380,7 +380,7 @@ public fun <@OnlyInputTypes T> assertContentEquals(expected: Set<T>?, actual: Se
  *
  * Two sequences are considered structurally equal if they have the same size, and elements at corresponding indices are equal.
  * Elements are compared for equality using the [equals][Any.equals] function.
- * For floating point numbers, it means that `NaN` is equal to itself and `-0.0` is not equal to `0.0`.
+ * For floating point numbers, this means `NaN` is equal to itself and `-0.0` is not equal to `0.0`.
  *
  * The sequences are also considered equal if both are `null`.
  */
@@ -394,7 +394,7 @@ public fun <@OnlyInputTypes T> assertContentEquals(expected: Sequence<T>?, actua
  *
  * Two arrays are considered structurally equal if they have the same size, and elements at corresponding indices are equal.
  * Elements are compared for equality using the [equals][Any.equals] function.
- * For floating point numbers, it means that `NaN` is equal to itself and `-0.0` is not equal to `0.0`.
+ * For floating point numbers, this means `NaN` is equal to itself and `-0.0` is not equal to `0.0`.
  *
  * The arrays are also considered equal if both are `null`.
  */
@@ -456,7 +456,7 @@ public fun assertContentEquals(expected: LongArray?, actual: LongArray?, message
  *
  * Two arrays are considered structurally equal if they have the same size, and elements at corresponding indices are equal.
  * Elements are compared for equality using the [equals][Any.equals] function.
- * For floating point numbers, it means that `NaN` is equal to itself and `-0.0` is not equal to `0.0`.
+ * For floating point numbers, this means `NaN` is equal to itself and `-0.0` is not equal to `0.0`.
  *
  * The arrays are also considered equal if both are `null`.
  */
@@ -470,7 +470,7 @@ public fun assertContentEquals(expected: FloatArray?, actual: FloatArray?, messa
  *
  * Two arrays are considered structurally equal if they have the same size, and elements at corresponding indices are equal.
  * Elements are compared for equality using the [equals][Any.equals] function.
- * For floating point numbers, it means that `NaN` is equal to itself and `-0.0` is not equal to `0.0`.
+ * For floating point numbers, this means `NaN` is equal to itself and `-0.0` is not equal to `0.0`.
  *
  * The arrays are also considered equal if both are `null`.
  */

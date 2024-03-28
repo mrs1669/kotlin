@@ -131,7 +131,7 @@ public actual fun UShortArray.asList(): List<UShort> {
  * Two arrays are considered structurally equal if they have the same size, and elements at corresponding indices are equal.
  * 
  * @param other the array to compare with this array.
- * @return `true` if both arrays are structurally equal, `false` otherwise.
+ * @return `true` if the two arrays are structurally equal, `false` otherwise.
  * 
  * @sample samples.collections.Arrays.ContentOperations.contentEquals
  */
@@ -149,7 +149,7 @@ public infix fun UIntArray.contentEquals(other: UIntArray): Boolean {
  * Two arrays are considered structurally equal if they have the same size, and elements at corresponding indices are equal.
  * 
  * @param other the array to compare with this array.
- * @return `true` if both arrays are structurally equal, `false` otherwise.
+ * @return `true` if the two arrays are structurally equal, `false` otherwise.
  * 
  * @sample samples.collections.Arrays.ContentOperations.contentEquals
  */
@@ -167,7 +167,7 @@ public infix fun ULongArray.contentEquals(other: ULongArray): Boolean {
  * Two arrays are considered structurally equal if they have the same size, and elements at corresponding indices are equal.
  * 
  * @param other the array to compare with this array.
- * @return `true` if both arrays are structurally equal, `false` otherwise.
+ * @return `true` if the two arrays are structurally equal, `false` otherwise.
  * 
  * @sample samples.collections.Arrays.ContentOperations.contentEquals
  */
@@ -185,7 +185,7 @@ public infix fun UByteArray.contentEquals(other: UByteArray): Boolean {
  * Two arrays are considered structurally equal if they have the same size, and elements at corresponding indices are equal.
  * 
  * @param other the array to compare with this array.
- * @return `true` if both arrays are structurally equal, `false` otherwise.
+ * @return `true` if the two arrays are structurally equal, `false` otherwise.
  * 
  * @sample samples.collections.Arrays.ContentOperations.contentEquals
  */
