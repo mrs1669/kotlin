@@ -58,8 +58,8 @@ public abstract class AbstractList<out E> protected constructor() : AbstractColl
      * Elements are compared for equality using the [equals][Any.equals] function.
      * For floating point numbers, it means that `NaN` is equal to itself and `-0.0` is not equal to `0.0`.
      *
-     * @param other The list to compare with `this` array.
-     * @return `true` if [other] is a [List] and is structurally equal to this list, `false` otherwise.
+     * @param other the list to compare with this list.
+     * @return `true` if [other] is a [List] that is structurally equal to this list, `false` otherwise.
      */
     override fun equals(other: Any?): Boolean {
         if (other === this) return true
