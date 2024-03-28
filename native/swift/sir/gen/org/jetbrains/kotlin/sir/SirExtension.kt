@@ -19,7 +19,7 @@ abstract class SirExtension : SirDeclarationContainer(), SirDeclaration {
     abstract override val visibility: SirVisibility
     abstract override var documentation: String?
     abstract override var parent: SirDeclarationParent
-    abstract override var declarations: MutableList<SirDeclaration>
+    abstract override val declarations: MutableList<SirDeclaration>
     abstract val extendedType: SirType
 
     override fun <R, D> accept(visitor: SirVisitor<R, D>, data: D): R =

@@ -75,7 +75,8 @@ abstract class AbstractSwiftIrTreeBuilder {
         return ListField(
             name = name,
             baseType = baseType,
-            isMutable = true,
+            isMutableList = true,
+            isMutable = false,
             isChild = isChild,
         ).apply {
             initializer()

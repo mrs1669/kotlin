@@ -19,7 +19,7 @@ internal class SirExtensionImpl(
     override val origin: SirOrigin,
     override val visibility: SirVisibility,
     override var documentation: String?,
-    override var declarations: MutableList<SirDeclaration>,
+    override val declarations: MutableList<SirDeclaration>,
     override val extendedType: SirType,
 ) : SirExtension() {
     override lateinit var parent: SirDeclarationParent

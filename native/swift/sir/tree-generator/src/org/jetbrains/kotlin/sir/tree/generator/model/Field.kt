@@ -60,6 +60,7 @@ class SimpleField(
 class ListField(
     name: String,
     override val baseType: TypeRef,
+    private val isMutableList: Boolean,
     isMutable: Boolean,
     override val isChild: Boolean,
 ) : Field(name, isMutable), ListField {
@@ -68,9 +69,9 @@ class ListField(
         get() = super.typeRef
 
     override val listType: ClassRef<PositionTypeParameterRef>
-        get() = if (isMutable) StandardTypes.mutableList else StandardTypes.list
+        get() = if (isMutableList) StandardTypes.mutableList else StandardTypes.list
 
-    override fun internalCopy() = ListField(name, baseType, isMutable, isChild)
+    override fun internalCopy() = ListField(name, baseType, isMutableList, isMutable, isChild)
 
     override fun replaceType(newType: TypeRefWithNullability) = internalCopy().also(::updateFieldsInCopy)
 }

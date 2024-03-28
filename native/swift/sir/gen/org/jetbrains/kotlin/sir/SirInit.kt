@@ -22,7 +22,7 @@ abstract class SirInit : SirCallable() {
     abstract override val kind: SirCallableKind
     abstract override var body: SirFunctionBody?
     abstract val isFailable: Boolean
-    abstract var parameters: MutableList<SirParameter>
+    abstract val parameters: MutableList<SirParameter>
     abstract val initKind: SirInitializerKind
 
     override fun <R, D> accept(visitor: SirVisitor<R, D>, data: D): R =
