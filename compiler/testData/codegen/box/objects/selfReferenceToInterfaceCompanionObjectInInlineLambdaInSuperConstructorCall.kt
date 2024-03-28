@@ -1,3 +1,5 @@
+// !LANGUAGE: -ProhibitSelfCallsInNestedObjects
+
 abstract class Base(val fn: () -> String)
 
 interface Host {
