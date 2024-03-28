@@ -158,12 +158,8 @@ typealias ElementOrRef = GenericElementOrRef<Element>
 sealed class Field(
     override val name: String,
     override var isMutable: Boolean,
-    isChild: Boolean,
+    override val isChild: Boolean,
 ) : AbstractField<Field>() {
-    init {
-        this.isChild = isChild
-    }
-
     var isOverride = false
 
     var passViaConstructorParameter = false
