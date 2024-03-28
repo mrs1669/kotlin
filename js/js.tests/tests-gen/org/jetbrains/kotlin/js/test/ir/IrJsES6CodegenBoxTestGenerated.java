@@ -16278,6 +16278,12 @@ public class IrJsES6CodegenBoxTestGenerated extends AbstractIrJsES6CodegenBoxTes
     }
 
     @Test
+    @TestMetadata("tryFinally.wasm-eh.kt")
+    public void testTryFinally_wasm_eh() {
+      runTest("compiler/testData/codegen/box/finally/tryFinally.wasm-eh.kt");
+    }
+
+    @Test
     @TestMetadata("tryLoopTry.kt")
     public void testTryLoopTry() {
       runTest("compiler/testData/codegen/box/finally/tryLoopTry.kt");
@@ -39954,9 +39960,21 @@ public class IrJsES6CodegenBoxTestGenerated extends AbstractIrJsES6CodegenBoxTes
     }
 
     @Test
+    @TestMetadata("finally11.wasm-eh.kt")
+    public void testFinally11_wasm_eh() {
+      runTest("compiler/testData/codegen/box/try/finally11.wasm-eh.kt");
+    }
+
+    @Test
     @TestMetadata("finally2.kt")
     public void testFinally2() {
       runTest("compiler/testData/codegen/box/try/finally2.kt");
+    }
+
+    @Test
+    @TestMetadata("finally2.wasm-eh.kt")
+    public void testFinally2_wasm_eh() {
+      runTest("compiler/testData/codegen/box/try/finally2.wasm-eh.kt");
     }
 
     @Test
@@ -40029,6 +40047,12 @@ public class IrJsES6CodegenBoxTestGenerated extends AbstractIrJsES6CodegenBoxTes
     @TestMetadata("try4.kt")
     public void testTry4() {
       runTest("compiler/testData/codegen/box/try/try4.kt");
+    }
+
+    @Test
+    @TestMetadata("try4.wasm-eh.kt")
+    public void testTry4_wasm_eh() {
+      runTest("compiler/testData/codegen/box/try/try4.wasm-eh.kt");
     }
   }
 

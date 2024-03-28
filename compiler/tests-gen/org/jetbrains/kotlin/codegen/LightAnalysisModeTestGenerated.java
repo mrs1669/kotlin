@@ -17718,6 +17718,11 @@ public class LightAnalysisModeTestGenerated extends AbstractLightAnalysisModeTes
       runTest("compiler/testData/codegen/box/finally/tryFinally.kt");
     }
 
+    @TestMetadata("tryFinally.wasm-eh.kt")
+    public void testTryFinally_wasm_eh() {
+      runTest("compiler/testData/codegen/box/finally/tryFinally.wasm-eh.kt");
+    }
+
     @TestMetadata("tryLoopTry.kt")
     public void testTryLoopTry() {
       runTest("compiler/testData/codegen/box/finally/tryLoopTry.kt");
@@ -45896,9 +45901,19 @@ public class LightAnalysisModeTestGenerated extends AbstractLightAnalysisModeTes
       runTest("compiler/testData/codegen/box/try/finally11.kt");
     }
 
+    @TestMetadata("finally11.wasm-eh.kt")
+    public void testFinally11_wasm_eh() {
+      runTest("compiler/testData/codegen/box/try/finally11.wasm-eh.kt");
+    }
+
     @TestMetadata("finally2.kt")
     public void testFinally2() {
       runTest("compiler/testData/codegen/box/try/finally2.kt");
+    }
+
+    @TestMetadata("finally2.wasm-eh.kt")
+    public void testFinally2_wasm_eh() {
+      runTest("compiler/testData/codegen/box/try/finally2.wasm-eh.kt");
     }
 
     @TestMetadata("finally3.kt")
@@ -45959,6 +45974,11 @@ public class LightAnalysisModeTestGenerated extends AbstractLightAnalysisModeTes
     @TestMetadata("try4.kt")
     public void testTry4() {
       runTest("compiler/testData/codegen/box/try/try4.kt");
+    }
+
+    @TestMetadata("try4.wasm-eh.kt")
+    public void testTry4_wasm_eh() {
+      runTest("compiler/testData/codegen/box/try/try4.wasm-eh.kt");
     }
   }
 

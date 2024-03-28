@@ -17,6 +17,8 @@ internal sealed class WasmVM(val shortName: String) {
     val name: String = javaClass.simpleName
     protected val tool = ExternalTool(System.getProperty("javascript.engine.path.$name"))
 
+    abstract val isNewExceptionHandlingSupported: Boolean
+
     abstract fun run(
         entryMjs: String,
         jsFiles: List<String>,
@@ -26,6 +28,9 @@ internal sealed class WasmVM(val shortName: String) {
     ): String
 
     object V8 : WasmVM("V8") {
+        // https://bugs.chromium.org/p/v8/issues/detail?id=14689
+        override val isNewExceptionHandlingSupported = false
+
         override fun run(
             entryMjs: String,
             jsFiles: List<String>,
@@ -37,14 +42,14 @@ internal sealed class WasmVM(val shortName: String) {
                 *toolArgs.toTypedArray(),
                 *jsFiles.toTypedArray(),
                 "--module",
-                "--no-experimental-wasm-legacy-eh",
-                "--experimental-wasm-exnref",
                 entryMjs,
                 workingDirectory = workingDirectory,
             )
     }
 
     object SpiderMonkey : WasmVM("SM") {
+        override val isNewExceptionHandlingSupported = true
+
         override fun run(
             entryMjs: String,
             jsFiles: List<String>,
@@ -63,6 +68,9 @@ internal sealed class WasmVM(val shortName: String) {
     }
 
     object NodeJs : WasmVM("NodeJs") {
+        // https://bugs.chromium.org/p/v8/issues/detail?id=14689
+        override val isNewExceptionHandlingSupported = false
+
         override fun run(
             entryMjs: String,
             jsFiles: List<String>,

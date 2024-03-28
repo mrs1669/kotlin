@@ -11,6 +11,7 @@ import org.jetbrains.kotlin.test.DebugMode
 import org.jetbrains.kotlin.test.InTextDirectivesUtils
 import org.jetbrains.kotlin.test.directives.WasmEnvironmentConfigurationDirectives.DISABLE_WASM_EXCEPTION_HANDLING
 import org.jetbrains.kotlin.test.directives.WasmEnvironmentConfigurationDirectives.RUN_UNIT_TESTS
+import org.jetbrains.kotlin.test.directives.WasmEnvironmentConfigurationDirectives.USE_NEW_EXCEPTION_HANDLING_PROPOSAL
 import org.jetbrains.kotlin.test.services.TestServices
 import org.jetbrains.kotlin.test.services.moduleStructure
 import org.jetbrains.kotlin.wasm.test.tools.WasmVM
@@ -19,8 +20,7 @@ import java.io.File
 class WasmBoxRunner(
     testServices: TestServices
 ) : AbstractWasmArtifactsCollector(testServices) {
-    // V8 doesn't work, just throw `unreachable` on the `try_table` instruction
-    private val vmsToCheck: List<WasmVM> = listOf(/* WasmVM.V8, */ WasmVM.SpiderMonkey)
+    private val vmsToCheck: List<WasmVM> = listOf(WasmVM.V8, WasmVM.SpiderMonkey)
 
     override fun processAfterAllModules(someAssertionWasFailed: Boolean) {
         if (!someAssertionWasFailed) {
@@ -116,17 +116,20 @@ class WasmBoxRunner(
             val failsIn: List<String> = InTextDirectivesUtils.findListWithPrefixes(testFileText, "// WASM_FAILS_IN: ")
 
             val disableExceptions = DISABLE_WASM_EXCEPTION_HANDLING in testServices.moduleStructure.allDirectives
+            val useNewExceptionProposal = USE_NEW_EXCEPTION_HANDLING_PROPOSAL in testServices.moduleStructure.allDirectives
 
-            val exceptions = vmsToCheck.mapNotNull { vm ->
-                vm.runWithCathedExceptions(
-                    debugMode = debugMode,
-                    disableExceptions = disableExceptions,
-                    failsIn = failsIn,
-                    entryMjs = collectedJsArtifacts.entryPath,
-                    jsFilePaths = jsFilePaths,
-                    workingDirectory = dir,
-                )
-            }
+            val exceptions = vmsToCheck
+                .filter { !useNewExceptionProposal || it.isNewExceptionHandlingSupported }
+                .mapNotNull { vm ->
+                    vm.runWithCathedExceptions(
+                        debugMode = debugMode,
+                        disableExceptions = disableExceptions,
+                        failsIn = failsIn,
+                        entryMjs = collectedJsArtifacts.entryPath,
+                        jsFilePaths = jsFilePaths,
+                        workingDirectory = dir,
+                    )
+                }
 
             processExceptions(exceptions)
 
