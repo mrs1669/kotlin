@@ -60,10 +60,7 @@ public class SirDeclarationProviderImpl(
         name = symbol.name.asString()
         origin = KotlinSource(symbol)
 
-//        declarations += symbol.getCombinedDeclaredMemberScope().extractDeclarations()
-
         documentation = symbol.documentation()
-
     }
 
     context(KtAnalysisSession, SirSession)
