@@ -1,76 +1,100 @@
 /*
- * Copyright 2010-2023 JetBrains s.r.o. and Kotlin Programming Language contributors.
+ * Copyright 2010-2024 JetBrains s.r.o. and Kotlin Programming Language contributors.
  * Use of this source code is governed by the Apache 2.0 license that can be found in the license/LICENSE.txt file.
  */
 
 package org.jetbrains.kotlin.analysis.api.standalone.base.project.structure
 
+import com.intellij.core.CoreApplicationEnvironment
+import com.intellij.ide.plugins.PluginXmlPathResolver
+import com.intellij.ide.plugins.RawPluginDescriptor
+import com.intellij.ide.plugins.ReadModuleContext
 import com.intellij.mock.MockApplication
 import com.intellij.mock.MockProject
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.extensions.DefaultPluginDescriptor
+import com.intellij.platform.util.plugins.DataLoader
 import com.intellij.psi.PsiElementFinder
 import com.intellij.psi.impl.PsiElementFinderImpl
+import com.intellij.util.NoOpXmlInterner
+import com.intellij.util.lang.ZipFilePool
+import com.intellij.util.messages.ListenerDescriptor
+import com.intellij.util.messages.impl.MessageBusEx
 import org.jetbrains.kotlin.analysis.api.KtAnalysisApiInternals
-import org.jetbrains.kotlin.analysis.api.fir.KtFirAnalysisSessionProvider
-import org.jetbrains.kotlin.analysis.api.fir.references.ReadWriteAccessCheckerFirImpl
-import org.jetbrains.kotlin.analysis.api.session.KtAnalysisSessionProvider
-import org.jetbrains.kotlin.analysis.api.standalone.base.providers.KotlinStandaloneDirectInheritorsProvider
-import org.jetbrains.kotlin.analysis.low.level.api.fir.LLFirGlobalResolveComponents
 import org.jetbrains.kotlin.analysis.low.level.api.fir.LLFirInternals
-import org.jetbrains.kotlin.analysis.low.level.api.fir.LLFirResolveSessionService
-import org.jetbrains.kotlin.analysis.low.level.api.fir.api.services.LLFirElementByPsiElementChooser
-import org.jetbrains.kotlin.analysis.low.level.api.fir.file.structure.LLFirDeclarationModificationService
-import org.jetbrains.kotlin.analysis.low.level.api.fir.project.structure.LLFirLibrarySymbolProviderFactory
-import org.jetbrains.kotlin.analysis.low.level.api.fir.project.structure.LLFirBuiltinsSessionFactory
-import org.jetbrains.kotlin.analysis.low.level.api.fir.services.LLRealFirElementByPsiElementChooser
-import org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.LLFirSessionCache
-import org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.LLFirSessionConfigurator
-import org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.LLFirSessionInvalidationService
-import org.jetbrains.kotlin.analysis.low.level.api.fir.stubBased.deserialization.LLStubBasedLibrarySymbolProviderFactory
-import org.jetbrains.kotlin.analysis.providers.KotlinDirectInheritorsProvider
-import org.jetbrains.kotlin.asJava.KotlinAsJavaSupport
+import org.jetbrains.kotlin.analysis.providers.analysisMessageBus
 import org.jetbrains.kotlin.asJava.finder.JavaElementFinder
-import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
-import org.jetbrains.kotlin.fir.extensions.FirExtensionRegistrarAdapter
-import org.jetbrains.kotlin.idea.references.KotlinFirReferenceContributor
-import org.jetbrains.kotlin.idea.references.KotlinReferenceProviderContributor
-import org.jetbrains.kotlin.idea.references.ReadWriteAccessChecker
-import org.jetbrains.kotlin.light.classes.symbol.SymbolKotlinAsJavaSupport
+import org.jetbrains.kotlin.utils.SmartList
+import java.io.InputStream
 
+@Suppress("UnstableApiUsage")
 @OptIn(LLFirInternals::class, KtAnalysisApiInternals::class)
 object FirStandaloneServiceRegistrar : AnalysisApiStandaloneServiceRegistrar {
-    override fun registerApplicationServices(application: MockApplication) {
-        application.apply {
-
+    private val pluginDescriptor: RawPluginDescriptor by lazy {
+        val readContext = object : ReadModuleContext {
+            override val interner get() = NoOpXmlInterner
+            override val isMissingIncludeIgnored: Boolean get() = false
         }
+
+        val dataLoader = object : DataLoader {
+            override val pool: ZipFilePool? get() = null
+            override fun load(path: String): InputStream? = ClassLoader.getSystemResource(path)?.openStream()
+            override fun toString(): String = "resources data loader"
+        }
+
+        val descriptor = RawPluginDescriptor()
+        PluginXmlPathResolver.DEFAULT_PATH_RESOLVER.resolvePath(
+            readContext = readContext,
+            dataLoader = dataLoader,
+            relativePath = "analysis-api-fir-standalone-base.xml",
+            readInto = descriptor,
+        )
+
+        descriptor
     }
 
+    override fun registerApplicationServices(application: MockApplication) {}
+
     override fun registerProjectExtensionPoints(project: MockProject) {
-        IrGenerationExtension.registerExtensionPoint(project)
-        FirExtensionRegistrarAdapter.registerExtensionPoint(project)
-        LLFirSessionConfigurator.registerExtensionPoint(project)
+        for (extensionPointDescriptor in pluginDescriptor.projectContainerDescriptor.extensionPoints.orEmpty()) {
+            CoreApplicationEnvironment.registerExtensionPoint(
+                project.extensionArea,
+                extensionPointDescriptor.name,
+                Class.forName(extensionPointDescriptor.className),
+            )
+        }
     }
 
     override fun registerProjectServices(project: MockProject) {
-        project.apply {
-            registerService(KtAnalysisSessionProvider::class.java, KtFirAnalysisSessionProvider(this))
-            registerService(LLFirResolveSessionService::class.java)
-            registerService(LLFirSessionCache::class.java)
-            registerService(KotlinAsJavaSupport::class.java, SymbolKotlinAsJavaSupport::class.java)
-            registerService(LLFirGlobalResolveComponents::class.java)
-            registerService(LLFirBuiltinsSessionFactory::class.java)
-            registerService(LLFirLibrarySymbolProviderFactory::class.java, LLStubBasedLibrarySymbolProviderFactory::class.java)
-            registerService(LLFirElementByPsiElementChooser::class.java, LLRealFirElementByPsiElementChooser::class.java)
-            registerService(KotlinReferenceProviderContributor::class.java, KotlinFirReferenceContributor::class.java)
-            registerService(ReadWriteAccessChecker::class.java, ReadWriteAccessCheckerFirImpl::class.java)
+        for (serviceDescriptor in pluginDescriptor.projectContainerDescriptor.services) {
+            val serviceImplementationClass = Class.forName(serviceDescriptor.serviceImplementation)
+            val serviceInterface = serviceDescriptor.serviceInterface
+            if (serviceInterface != null) {
+                val serviceInterfaceClass = Class.forName(serviceInterface)
 
-            registerService(LLFirSessionInvalidationService::class.java)
-            LLFirSessionInvalidationService.getInstance(project).subscribeToModificationEvents()
-
-            registerService(LLFirDeclarationModificationService::class.java)
-
-            registerService(KotlinDirectInheritorsProvider::class.java, KotlinStandaloneDirectInheritorsProvider(project))
+                @Suppress("UNCHECKED_CAST")
+                project.registerServiceWithInterface(serviceInterfaceClass as Class<Any>, serviceImplementationClass as Class<Any>)
+            } else {
+                project.registerService(serviceImplementationClass)
+            }
         }
+
+        registerProjectListeners(project)
+    }
+
+    private fun registerProjectListeners(project: MockProject) {
+        val listenerDescriptors = pluginDescriptor.projectContainerDescriptor.listeners.orEmpty().ifEmpty {
+            return
+        }
+
+        val pluginDescriptor = DefaultPluginDescriptor("analysis-api-fir-standalone")
+        val listenersMap = mutableMapOf<String, MutableList<ListenerDescriptor>>()
+        for (listenerDescriptor in listenerDescriptors) {
+            listenerDescriptor.pluginDescriptor = pluginDescriptor
+            listenersMap.computeIfAbsent(listenerDescriptor.topicClassName) { SmartList() }.add(listenerDescriptor)
+        }
+
+        (project.analysisMessageBus as MessageBusEx).setLazyListeners(listenersMap)
     }
 
     @Suppress("TestOnlyProblems")
@@ -80,4 +104,9 @@ object FirStandaloneServiceRegistrar : AnalysisApiStandaloneServiceRegistrar {
             registerExtension(PsiElementFinderImpl(project), disposable)
         }
     }
+}
+
+// workaround for ambiguity resolution
+private fun <T> MockProject.registerServiceWithInterface(interfaceClass: Class<T>, implementationClass: Class<T>) {
+    registerService(interfaceClass, implementationClass)
 }

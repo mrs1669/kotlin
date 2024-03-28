@@ -1,0 +1,30 @@
+<idea-plugin xmlns:xi="http://www.w3.org/2001/XInclude">
+  <xi:include href="low-level-api-fir.xml" xpointer="xpointer(/idea-plugin/*)"/>
+  <xi:include href="symbol-light-classes.xml" xpointer="xpointer(/idea-plugin/*)"/>
+
+  <extensionPoints>
+    <xi:include href="extensions/compiler.xml" xpointer="xpointer(/idea-plugin/extensionPoints/*)"/>
+  </extensionPoints>
+
+  <extensions defaultExtensionNs="com.intellij">
+    <projectService
+        serviceInterface="org.jetbrains.kotlin.analysis.api.session.KtAnalysisSessionProvider"
+        serviceImplementation="org.jetbrains.kotlin.analysis.api.fir.KtFirAnalysisSessionProvider"
+    />
+
+    <projectService
+        serviceInterface="org.jetbrains.kotlin.idea.references.KotlinReferenceProviderContributor"
+        serviceImplementation="org.jetbrains.kotlin.idea.references.KotlinFirReferenceContributor"
+    />
+
+    <projectService
+        serviceInterface="org.jetbrains.kotlin.idea.references.ReadWriteAccessChecker"
+        serviceImplementation="org.jetbrains.kotlin.analysis.api.fir.references.ReadWriteAccessCheckerFirImpl"
+    />
+
+    <projectService
+        serviceInterface="org.jetbrains.kotlin.psi.KotlinReferenceProvidersService"
+        serviceImplementation="org.jetbrains.kotlin.analysis.api.impl.base.references.HLApiReferenceProviderService"
+    />
+  </extensions>
+</idea-plugin>

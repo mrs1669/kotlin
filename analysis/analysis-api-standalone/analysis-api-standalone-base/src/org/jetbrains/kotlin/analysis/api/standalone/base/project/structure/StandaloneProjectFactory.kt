@@ -30,6 +30,8 @@ import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.search.ProjectScope
 import com.intellij.util.io.URLUtil.JAR_PROTOCOL
 import com.intellij.util.io.URLUtil.JAR_SEPARATOR
+import com.intellij.util.messages.ListenerDescriptor
+import org.jetbrains.kotlin.analysis.api.KtAnalysisNonPublicApi
 import org.jetbrains.kotlin.analysis.api.impl.base.java.source.JavaElementSourceWithSmartPointerFactory
 import org.jetbrains.kotlin.analysis.api.impl.base.references.HLApiReferenceProviderService
 import org.jetbrains.kotlin.analysis.api.impl.base.util.LibraryUtils
@@ -97,6 +99,13 @@ object StandaloneProjectFactory {
                         @Suppress("UNCHECKED_CAST")
                         return Class.forName(className, true, classLoader) as Class<T>
                     }
+
+                    @Suppress("UnstableApiUsage")
+                    override fun createListener(descriptor: ListenerDescriptor): Any {
+                        val listenerClass = loadClass<Any>(descriptor.listenerClassName, descriptor.pluginDescriptor)
+                        val listener = listenerClass.getDeclaredConstructor(Project::class.java).newInstance(this)
+                        return listener
+                    }
                 }
             }
         }
@@ -134,6 +143,7 @@ object StandaloneProjectFactory {
         )
 
         project.apply {
+            @OptIn(KtAnalysisNonPublicApi::class)
             registerService(KotlinReferenceProvidersService::class.java, HLApiReferenceProviderService::class.java)
         }
     }
