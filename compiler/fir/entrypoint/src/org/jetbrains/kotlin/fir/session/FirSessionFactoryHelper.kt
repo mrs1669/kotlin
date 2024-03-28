@@ -13,7 +13,9 @@ import org.jetbrains.kotlin.fir.analysis.FirOverridesBackwardCompatibilityHelper
 import org.jetbrains.kotlin.fir.extensions.FirExtensionRegistrar
 import org.jetbrains.kotlin.fir.extensions.FirExtensionService
 import org.jetbrains.kotlin.fir.java.FirProjectSessionProvider
+import org.jetbrains.kotlin.fir.resolve.FirExpressionEvaluatorComponent
 import org.jetbrains.kotlin.fir.resolve.calls.ConeCallConflictResolverFactory
+import org.jetbrains.kotlin.fir.resolve.transformers.FirExpressionEvaluator
 import org.jetbrains.kotlin.fir.scopes.FirPlatformClassMapper
 import org.jetbrains.kotlin.fir.scopes.impl.FirDelegatedMembersFilter
 import org.jetbrains.kotlin.fir.session.environment.AbstractProjectEnvironment
@@ -144,5 +146,6 @@ object FirSessionFactoryHelper {
         register(FirOverridesBackwardCompatibilityHelper::class, FirDefaultOverridesBackwardCompatibilityHelper)
         register(FirDelegatedMembersFilter::class, FirDelegatedMembersFilter.Default)
         register(FirPlatformSpecificCastChecker::class, FirPlatformSpecificCastChecker.Default)
+        register(FirExpressionEvaluatorComponent::class, FirExpressionEvaluator)
     }
 }

@@ -20,6 +20,7 @@ import org.jetbrains.kotlin.fir.expressions.builder.*
 import org.jetbrains.kotlin.fir.expressions.impl.FirResolvedArgumentList
 import org.jetbrains.kotlin.fir.references.FirResolvedNamedReference
 import org.jetbrains.kotlin.fir.references.toResolvedCallableSymbol
+import org.jetbrains.kotlin.fir.resolve.FirExpressionEvaluatorComponent
 import org.jetbrains.kotlin.fir.resolve.diagnostics.canBeEvaluatedAtCompileTime
 import org.jetbrains.kotlin.fir.resolve.diagnostics.canBeUsedForConstVal
 import org.jetbrains.kotlin.fir.resolve.fullyExpandedType
@@ -38,8 +39,8 @@ import org.jetbrains.kotlin.types.ConstantValueKind
 import org.jetbrains.kotlin.util.OperatorNameConventions
 
 
-object FirExpressionEvaluator {
-    fun evaluatePropertyInitializer(property: FirProperty, session: FirSession): FirEvaluatorResult? {
+object FirExpressionEvaluator : FirExpressionEvaluatorComponent {
+    override fun evaluatePropertyInitializer(property: FirProperty, session: FirSession): FirEvaluatorResult? {
         if (!property.isConst) {
             return null
         }
@@ -57,7 +58,7 @@ object FirExpressionEvaluator {
         return initializer.evaluate(session)
     }
 
-    fun evaluateDefault(valueParameter: FirValueParameter, session: FirSession): FirEvaluatorResult? {
+    override fun evaluateDefault(valueParameter: FirValueParameter, session: FirSession): FirEvaluatorResult? {
         // We should evaluate default arguments for the primary constructor of an annotation
         if (!valueParameter.containingFunctionSymbol.isAnnotationConstructor(session)) return null
 
@@ -68,7 +69,7 @@ object FirExpressionEvaluator {
         return defaultValueToEvaluate.evaluate(session)
     }
 
-    fun evaluateAnnotationArguments(annotation: FirAnnotation, session: FirSession): Map<Name, FirEvaluatorResult>? {
+    override fun evaluateAnnotationArguments(annotation: FirAnnotation, session: FirSession): Map<Name, FirEvaluatorResult>? {
         val argumentMapping = annotation.argumentMapping.mapping
 
         if (argumentMapping.values.any { expr -> !expr.canBeEvaluated(session) }) {
