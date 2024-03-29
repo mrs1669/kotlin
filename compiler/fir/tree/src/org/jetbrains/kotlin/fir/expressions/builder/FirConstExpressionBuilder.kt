@@ -15,7 +15,6 @@ import org.jetbrains.kotlin.fir.types.constructClassLikeType
 import org.jetbrains.kotlin.name.StandardClassIds
 import org.jetbrains.kotlin.types.ConstantValueKind
 
-@OptIn(UnresolvedExpressionTypeAccess::class)
 fun <T> buildLiteralExpression(
     source: KtSourceElement?,
     kind: ConstantValueKind<T>,
@@ -25,27 +24,33 @@ fun <T> buildLiteralExpression(
 ): FirLiteralExpression<T> {
     return FirLiteralExpressionImpl(source, null, annotations.toMutableOrEmpty(), kind, value).also {
         if (setType) {
-            when (kind) {
-                ConstantValueKind.Boolean -> it.coneTypeOrNull = StandardClassIds.Boolean.constructClassLikeType()
-                ConstantValueKind.Byte -> it.coneTypeOrNull = StandardClassIds.Byte.constructClassLikeType()
-                ConstantValueKind.Char -> it.coneTypeOrNull = StandardClassIds.Char.constructClassLikeType()
-                ConstantValueKind.Double -> it.coneTypeOrNull = StandardClassIds.Double.constructClassLikeType()
-                ConstantValueKind.Float -> it.coneTypeOrNull = StandardClassIds.Float.constructClassLikeType()
-                ConstantValueKind.Int -> it.coneTypeOrNull = StandardClassIds.Int.constructClassLikeType()
-                ConstantValueKind.Long -> it.coneTypeOrNull = StandardClassIds.Long.constructClassLikeType()
-                ConstantValueKind.Null -> it.coneTypeOrNull = StandardClassIds.Any.constructClassLikeType(isNullable = true)
-                ConstantValueKind.Short -> it.coneTypeOrNull = StandardClassIds.Short.constructClassLikeType()
-                ConstantValueKind.String -> it.coneTypeOrNull = StandardClassIds.String.constructClassLikeType()
-                ConstantValueKind.UnsignedByte -> it.coneTypeOrNull = StandardClassIds.UByte.constructClassLikeType()
-                ConstantValueKind.UnsignedInt -> it.coneTypeOrNull = StandardClassIds.UInt.constructClassLikeType()
-                ConstantValueKind.UnsignedLong -> it.coneTypeOrNull = StandardClassIds.ULong.constructClassLikeType()
-                ConstantValueKind.UnsignedShort -> it.coneTypeOrNull = StandardClassIds.UShort.constructClassLikeType()
-                ConstantValueKind.IntegerLiteral,
-                ConstantValueKind.UnsignedIntegerLiteral,
-                ConstantValueKind.Error,
-                -> {
-                }
-            }
+            it.setType()
+        }
+    }
+}
+
+@OptIn(UnresolvedExpressionTypeAccess::class)
+fun <T> FirLiteralExpression<T>.setType() {
+    if (this !is FirLiteralExpressionImpl<T>) return
+    when (kind) {
+        ConstantValueKind.Boolean -> coneTypeOrNull = StandardClassIds.Boolean.constructClassLikeType()
+        ConstantValueKind.Byte -> coneTypeOrNull = StandardClassIds.Byte.constructClassLikeType()
+        ConstantValueKind.Char -> coneTypeOrNull = StandardClassIds.Char.constructClassLikeType()
+        ConstantValueKind.Double -> coneTypeOrNull = StandardClassIds.Double.constructClassLikeType()
+        ConstantValueKind.Float -> coneTypeOrNull = StandardClassIds.Float.constructClassLikeType()
+        ConstantValueKind.Int -> coneTypeOrNull = StandardClassIds.Int.constructClassLikeType()
+        ConstantValueKind.Long -> coneTypeOrNull = StandardClassIds.Long.constructClassLikeType()
+        ConstantValueKind.Null -> coneTypeOrNull = StandardClassIds.Any.constructClassLikeType(isNullable = true)
+        ConstantValueKind.Short -> coneTypeOrNull = StandardClassIds.Short.constructClassLikeType()
+        ConstantValueKind.String -> coneTypeOrNull = StandardClassIds.String.constructClassLikeType()
+        ConstantValueKind.UnsignedByte -> coneTypeOrNull = StandardClassIds.UByte.constructClassLikeType()
+        ConstantValueKind.UnsignedInt -> coneTypeOrNull = StandardClassIds.UInt.constructClassLikeType()
+        ConstantValueKind.UnsignedLong -> coneTypeOrNull = StandardClassIds.ULong.constructClassLikeType()
+        ConstantValueKind.UnsignedShort -> coneTypeOrNull = StandardClassIds.UShort.constructClassLikeType()
+        ConstantValueKind.IntegerLiteral,
+        ConstantValueKind.UnsignedIntegerLiteral,
+        ConstantValueKind.Error,
+        -> {
         }
     }
 }
