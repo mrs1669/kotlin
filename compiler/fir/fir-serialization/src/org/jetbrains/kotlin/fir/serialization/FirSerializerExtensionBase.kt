@@ -10,8 +10,10 @@ import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget
 import org.jetbrains.kotlin.fir.FirEvaluatorResult
 import org.jetbrains.kotlin.fir.declarations.*
 import org.jetbrains.kotlin.fir.declarations.utils.evaluatedInitializer
+import org.jetbrains.kotlin.fir.declarations.utils.isConst
 import org.jetbrains.kotlin.fir.expressions.FirAnnotation
 import org.jetbrains.kotlin.fir.expressions.FirExpression
+import org.jetbrains.kotlin.fir.render
 import org.jetbrains.kotlin.fir.serialization.constant.toConstantValue
 import org.jetbrains.kotlin.metadata.ProtoBuf
 import org.jetbrains.kotlin.metadata.ProtoBuf.Class.Builder
@@ -117,7 +119,7 @@ abstract class FirSerializerExtensionBase(
         val evaluatedInitializer = (property.evaluatedInitializer as? FirEvaluatorResult.Evaluated)?.result as? FirExpression
         evaluatedInitializer?.toConstantValue<ConstantValue<*>>(session, scopeSession, constValueProvider)?.let {
             proto.setExtension(protocol.compileTimeValue, annotationSerializer.valueProto(it).build())
-        }
+        } ?: require(!property.isConst) { "Const property has no const initializer expression. Got ${property.initializer?.render()}" }
     }
 
     override fun serializeEnumEntry(enumEntry: FirEnumEntry, proto: ProtoBuf.EnumEntry.Builder) {
