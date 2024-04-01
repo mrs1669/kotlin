@@ -39273,6 +39273,12 @@ public class FirLightTreeOldFrontendDiagnosticsTestGenerated extends AbstractFir
       }
 
       @Test
+      @TestMetadata("ExhaustiveSelftype.kt")
+      public void testExhaustiveSelftype() {
+        runTest("compiler/testData/diagnostics/tests/when/ExhaustiveSelftype.kt");
+      }
+
+      @Test
       @TestMetadata("ExhaustiveValOverConditionalInit.kt")
       public void testExhaustiveValOverConditionalInit() {
         runTest("compiler/testData/diagnostics/tests/when/ExhaustiveValOverConditionalInit.kt");
