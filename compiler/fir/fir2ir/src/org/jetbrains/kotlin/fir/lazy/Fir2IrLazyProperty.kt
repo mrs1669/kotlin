@@ -22,7 +22,6 @@ import org.jetbrains.kotlin.fir.declarations.primaryConstructorIfAny
 import org.jetbrains.kotlin.fir.declarations.utils.*
 import org.jetbrains.kotlin.fir.expressions.FirLiteralExpression
 import org.jetbrains.kotlin.fir.expressions.FirExpression
-import org.jetbrains.kotlin.fir.expressions.builder.setType
 import org.jetbrains.kotlin.fir.resolve.toFirRegularClass
 import org.jetbrains.kotlin.fir.symbols.lazyResolveToPhase
 import org.jetbrains.kotlin.fir.types.coneType
@@ -123,10 +122,12 @@ class Fir2IrLazyProperty(
             }
             // Setting initializers to every other class causes some cryptic errors in lowerings
             initializer is FirLiteralExpression<*> -> {
-                if (!initializer.isResolved) {
-                    initializer.setType()
-                }
-                val constType = with(typeConverter) { initializer.resolvedType.toIrType() }
+                val constType = if (initializer.isResolved) {
+                    with(typeConverter) { initializer.resolvedType.toIrType() }
+                } else {
+                    fir.lazyResolveToPhase(FirResolvePhase.BODY_RESOLVE)
+                    with(typeConverter) { fir.initializer?.resolvedType?.toIrType() }
+                } ?: return null
                 factory.createExpressionBody(initializer.toIrConst(constType))
             }
             else -> null

@@ -50,4 +50,10 @@ public class FirIdeNormalAnalysisSourceModuleFirPluginPrototypeCompilerFacilityT
   public void testConstExprInitializer() {
     runTest("analysis/analysis-api/testData/components/compilerFacility/bugsFromRealComposeApps/constExprInitializer.kt");
   }
+
+  @Test
+  @TestMetadata("constExprLateInitializer.kt")
+  public void testConstExprLateInitializer() {
+    runTest("analysis/analysis-api/testData/components/compilerFacility/bugsFromRealComposeApps/constExprLateInitializer.kt");
+  }
 }
