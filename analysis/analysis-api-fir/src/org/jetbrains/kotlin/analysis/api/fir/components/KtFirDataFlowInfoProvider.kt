@@ -24,19 +24,8 @@ import org.jetbrains.kotlin.analysis.utils.printer.parentsOfType
 import org.jetbrains.kotlin.fir.FirElement
 import org.jetbrains.kotlin.fir.analysis.checkers.declaration.isLocalMember
 import org.jetbrains.kotlin.fir.declarations.*
-import org.jetbrains.kotlin.fir.expressions.FirBlock
-import org.jetbrains.kotlin.fir.expressions.FirBreakExpression
-import org.jetbrains.kotlin.fir.expressions.FirContinueExpression
-import org.jetbrains.kotlin.fir.expressions.FirErrorExpression
-import org.jetbrains.kotlin.fir.expressions.FirExpression
-import org.jetbrains.kotlin.fir.expressions.FirJump
-import org.jetbrains.kotlin.fir.expressions.FirLoop
-import org.jetbrains.kotlin.fir.expressions.FirResolvedQualifier
-import org.jetbrains.kotlin.fir.expressions.FirReturnExpression
-import org.jetbrains.kotlin.fir.expressions.FirThrowExpression
-import org.jetbrains.kotlin.fir.expressions.FirVariableAssignment
+import org.jetbrains.kotlin.fir.expressions.*
 import org.jetbrains.kotlin.fir.expressions.impl.FirUnitExpression
-import org.jetbrains.kotlin.fir.expressions.toResolvedCallableSymbol
 import org.jetbrains.kotlin.fir.psi
 import org.jetbrains.kotlin.fir.resolve.dfa.cfg.AnonymousObjectExpressionExitNode
 import org.jetbrains.kotlin.fir.resolve.dfa.cfg.CFGNode
@@ -57,12 +46,7 @@ import org.jetbrains.kotlin.fir.resolve.dfa.cfg.WhenSubjectExpressionExitNode
 import org.jetbrains.kotlin.fir.resolve.dfa.controlFlowGraph
 import org.jetbrains.kotlin.fir.symbols.impl.FirVariableSymbol
 import org.jetbrains.kotlin.fir.symbols.lazyResolveToPhase
-import org.jetbrains.kotlin.fir.types.ConeKotlinType
-import org.jetbrains.kotlin.fir.types.commonSuperTypeOrNull
-import org.jetbrains.kotlin.fir.types.isNothing
-import org.jetbrains.kotlin.fir.types.isUnit
-import org.jetbrains.kotlin.fir.types.resolvedType
-import org.jetbrains.kotlin.fir.types.typeContext
+import org.jetbrains.kotlin.fir.types.*
 import org.jetbrains.kotlin.fir.utils.exceptions.withFirEntry
 import org.jetbrains.kotlin.fir.visitors.FirDefaultVisitorVoid
 import org.jetbrains.kotlin.psi.KtDeclaration
@@ -100,14 +84,9 @@ internal class KtFirDataFlowInfoProvider(override val analysisSession: KtFirAnal
         val firDefaultStatementCandidate = firStatements.last()
         val defaultExpressionInfo = computeDefaultExpression(statements, firDefaultStatementCandidate, firValuedReturnExpressions)
 
-        val firEscapingCandidates = buildSet<FirElement> {
-            add(firDefaultStatementCandidate)
-            addAll(collector.firReturnExpressions)
-            addAll(collector.firBreakExpressions)
-            addAll(collector.firContinueExpressions)
+        val graphIndex = ControlFlowGraphIndex {
+            getControlFlowGraph(anchor = statements.first(), firAnchorPath = firStatementPaths.first())
         }
-
-        val hasEscapingJumps = computeHasEscapingJumps(statements.first(), firStatementPaths.first(), firEscapingCandidates)
 
         val jumpExpressions = buildList {
             fun add(expressions: List<FirElement>) {
@@ -125,9 +104,9 @@ internal class KtFirDataFlowInfoProvider(override val analysisSession: KtFirAnal
             returnValueType = computeReturnType(firValuedReturnExpressions),
             jumpExpressions = jumpExpressions,
             hasJumps = collector.hasJumps,
-            hasEscapingJumps = hasEscapingJumps,
+            hasEscapingJumps = graphIndex.computeHasEscapingJumps(firDefaultStatementCandidate, collector),
             hasMultipleJumpKinds = collector.hasMultipleJumpKinds,
-            hasMultipleJumpTargets = collector.hasMultipleJumpTargets,
+            hasMultipleJumpTargets = graphIndex.computeHasMultipleJumpTargets(collector),
             variableReassignments = collector.variableReassignments
         )
     }
@@ -215,17 +194,34 @@ internal class KtFirDataFlowInfoProvider(override val analysisSession: KtFirAnal
         return analysisSession.useSiteSession.typeContext.commonSuperTypeOrNull(coneTypes)?.toKtType()
     }
 
-    private fun computeHasEscapingJumps(anchor: KtElement, firAnchorPath: List<FirElement>, firTargets: Set<FirElement>): Boolean {
-        val graphIndex = ControlFlowGraphIndex {
-            findControlFlowGraph(anchor, firAnchorPath)
-                ?: errorWithAttachment("Cannot find a control flow graph for element") {
-                    withKtModuleEntry("module", analysisSession.useSiteModule)
-                    withPsiEntry("anchor", anchor)
-                    withFirEntry("firAnchor", firAnchorPath.last())
-                }
+    private fun ControlFlowGraphIndex.computeHasEscapingJumps(firDefaultStatement: FirElement, collector: FirElementCollector): Boolean {
+        val firTargets = buildSet<FirElement> {
+            add(firDefaultStatement)
+            addAll(collector.firReturnExpressions)
+            addAll(collector.firBreakExpressions)
+            addAll(collector.firContinueExpressions)
         }
 
-        return graphIndex.hasMultipleExitPoints(firTargets)
+        return hasMultipleExitPoints(firTargets)
+    }
+
+    private fun ControlFlowGraphIndex.computeHasMultipleJumpTargets(collector: FirElementCollector): Boolean {
+        val firTargets = buildSet<FirElement> {
+            addAll(collector.firReturnExpressions)
+            addAll(collector.firBreakExpressions)
+            addAll(collector.firContinueExpressions)
+        }
+
+        return hasMultipleExitPoints(firTargets)
+    }
+
+    private fun getControlFlowGraph(anchor: KtElement, firAnchorPath: List<FirElement>): ControlFlowGraph {
+        return findControlFlowGraph(anchor, firAnchorPath)
+            ?: errorWithAttachment("Cannot find a control flow graph for element") {
+                withKtModuleEntry("module", analysisSession.useSiteModule)
+                withPsiEntry("anchor", anchor)
+                withFirEntry("firAnchor", firAnchorPath.last())
+            }
     }
 
     private fun findControlFlowGraph(anchor: KtElement, firAnchorPath: List<FirElement>): ControlFlowGraph? {
@@ -387,9 +383,6 @@ internal class KtFirDataFlowInfoProvider(override val analysisSession: KtFirAnal
 
         val hasMultipleJumpKinds: Boolean
             get() = (firReturnExpressions.size.sign + firBreakExpressions.size.sign + firContinueExpressions.size.sign) > 1
-
-        val hasMultipleJumpTargets: Boolean
-            get() = (firReturnTargets.size + firLoopJumpTargets.size) > 1
 
         val variableReassignments = mutableListOf<VariableReassignment>()
 
