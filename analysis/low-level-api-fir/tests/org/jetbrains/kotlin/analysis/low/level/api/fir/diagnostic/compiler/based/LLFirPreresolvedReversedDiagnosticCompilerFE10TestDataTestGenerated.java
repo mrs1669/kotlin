@@ -41821,6 +41821,12 @@ public class LLFirPreresolvedReversedDiagnosticCompilerFE10TestDataTestGenerated
       }
 
       @Test
+      @TestMetadata("ExhaustiveSealedIntersection.kt")
+      public void testExhaustiveSealedIntersection() {
+        runTest("compiler/testData/diagnostics/tests/when/ExhaustiveSealedIntersection.kt");
+      }
+
+      @Test
       @TestMetadata("ExhaustiveValOverConditionalInit.kt")
       public void testExhaustiveValOverConditionalInit() {
         runTest("compiler/testData/diagnostics/tests/when/ExhaustiveValOverConditionalInit.kt");
