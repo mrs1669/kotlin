@@ -5,21 +5,24 @@
 fun f1(x: Number): String = x.toString()
 fun f2(x: Number): String = x.toString()
 
-fun id1(f: (Float) -> String): String = js("f(42.2)")
-fun id2(f: (Byte) -> String): String =  js("f(42)")
+fun floatLambda(f: (Float) -> String): String = js("f(42.2)")
+fun byteLambda(f: (Byte) -> String): String =  js("f(42)")
 
 fun box(): String {
 
     val f1ref = ::f1
-    val id11 = id1(f1ref)
-    val id12 = id2(f1ref)
+    val resultAsFloat1 = floatLambda(f1ref)
+    val resultAsByte1 = byteLambda(f1ref)
 
     val f2ref = ::f2
-    val id22 = id2(f2ref)
-    val id21 = id1(f2ref)
+    val resultAsByte2 = byteLambda(f2ref)
+    val resultAsFloat2 = floatLambda(f2ref)
 
-    if (id11 != id21) return "FAIL1"
-    if (id12 != id22) return "FAIL2"
+    if (resultAsFloat1 != resultAsFloat2) return "FAIL1"
+    if (resultAsByte1 != resultAsByte2) return "FAIL2"
+
+    if (resultAsFloat1 == resultAsByte1) return "FAIL3"
+    if (resultAsFloat2 == resultAsByte2) return "FAIL4"
 
     return "OK"
 }
