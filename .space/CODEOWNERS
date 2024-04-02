@@ -292,7 +292,7 @@
 /libraries/tools/binary-compatibility-validator/ "Kotlin Libraries"
 /libraries/tools/dukat/ "Kotlin Wasm"
 /libraries/tools/ide-plugin-dependencies-validator "Kotlin IDE Analysis Core"
-/libraries/kotlin-dom-api-compat/ Ilya.Goncharov
+/libraries/kotlin-dom-api-compat/ Ilya.Goncharov "Kotlin Build Infrastructure"
 /libraries/tools/kotlin-build-tools-enum-compat/ "Kotlin Build Tools"
 /libraries/tools/gradle/ "Kotlin Build Tools"
 /libraries/tools/jdk-api-validator/ "Kotlin Libraries"
@@ -339,7 +339,7 @@
 /libraries/tools/kotlin-stdlib-docs/ A.Qurbonzoda Vsevolod.Tolstopyato Ilya.Gorbunov Filipp.Zhinkin
 /libraries/tools/kotlin-stdlib-docs-legacy/ A.Qurbonzoda Vsevolod.Tolstopyato Ilya.Gorbunov Filipp.Zhinkin
 /libraries/tools/kotlin-stdlib-gen/ A.Qurbonzoda Vsevolod.Tolstopyato Ilya.Gorbunov Filipp.Zhinkin
-/libraries/tools/kotlin-test-js-runner/ "Kotlin Common Backend"
+/libraries/tools/kotlin-test-js-runner/ "Kotlin Wasm"
 /libraries/tools/kotlin-tooling-core/ "Kotlin Build Tools" "Kotlin in Fleet"
 /libraries/tools/kotlin-tooling-metadata/ "Kotlin Build Tools"
 /libraries/tools/kotlinp/ "Kotlin JVM" "Kotlin Common Backend"
