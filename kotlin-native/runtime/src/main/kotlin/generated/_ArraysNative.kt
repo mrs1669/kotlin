@@ -459,7 +459,7 @@ public infix fun DoubleArray.contentEquals(other: DoubleArray): Boolean {
  * @param other the array to compare with this array.
  * @return `true` if the two arrays are structurally equal, `false` otherwise.
  * 
- * @sample samples.collections.Arrays.ContentOperations.intArrayContentEquals
+ * @sample samples.collections.Arrays.ContentOperations.booleanArrayContentEquals
  */
 @Deprecated("Use Kotlin compiler 1.4 to avoid deprecation warning.")
 @SinceKotlin("1.1")
@@ -476,7 +476,7 @@ public infix fun BooleanArray.contentEquals(other: BooleanArray): Boolean {
  * @param other the array to compare with this array.
  * @return `true` if the two arrays are structurally equal, `false` otherwise.
  * 
- * @sample samples.collections.Arrays.ContentOperations.intArrayContentEquals
+ * @sample samples.collections.Arrays.ContentOperations.charArrayContentEquals
  */
 @Deprecated("Use Kotlin compiler 1.4 to avoid deprecation warning.")
 @SinceKotlin("1.1")
@@ -664,7 +664,7 @@ public actual infix fun DoubleArray?.contentEquals(other: DoubleArray?): Boolean
  * @param other the array to compare with this array.
  * @return `true` if the two arrays are structurally equal, `false` otherwise.
  * 
- * @sample samples.collections.Arrays.ContentOperations.intArrayContentEquals
+ * @sample samples.collections.Arrays.ContentOperations.booleanArrayContentEquals
  */
 @SinceKotlin("1.4")
 public actual infix fun BooleanArray?.contentEquals(other: BooleanArray?): Boolean {
@@ -687,7 +687,7 @@ public actual infix fun BooleanArray?.contentEquals(other: BooleanArray?): Boole
  * @param other the array to compare with this array.
  * @return `true` if the two arrays are structurally equal, `false` otherwise.
  * 
- * @sample samples.collections.Arrays.ContentOperations.intArrayContentEquals
+ * @sample samples.collections.Arrays.ContentOperations.charArrayContentEquals
  */
 @SinceKotlin("1.4")
 public actual infix fun CharArray?.contentEquals(other: CharArray?): Boolean {

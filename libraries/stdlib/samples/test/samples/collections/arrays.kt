@@ -191,6 +191,34 @@ class Arrays {
         }
 
         @Sample
+        fun charArrayContentEquals() {
+            val array = charArrayOf('a', 'b', 'c')
+
+            // the same size and equal elements
+            assertPrints(array.contentEquals(charArrayOf('a', 'b', 'c')), "true")
+
+            // different size
+            assertPrints(array.contentEquals(charArrayOf('a', 'b')), "false")
+
+            // the elements at index 1 are not equal
+            assertPrints(array.contentEquals(charArrayOf('a', 'c', 'b')), "false")
+        }
+
+        @Sample
+        fun booleanArrayContentEquals() {
+            val array = booleanArrayOf(true, false, true)
+
+            // the same size and equal elements
+            assertPrints(array.contentEquals(booleanArrayOf(true, false, true)), "true")
+
+            // different size
+            assertPrints(array.contentEquals(booleanArrayOf(true, false)), "false")
+
+            // the elements at index 1 are not equal
+            assertPrints(array.contentEquals(booleanArrayOf(true, true, false)), "false")
+        }
+
+        @Sample
         fun intArrayContentEquals() {
             val array = intArrayOf(1, 2, 3)
 

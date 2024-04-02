@@ -127,6 +127,8 @@ object ArrayOps : TemplateGroupBase() {
         val sampleMethod = when {
             isArrayOfObjects -> "arrayContentEquals"
             isArrayOfFloatingPoint -> "doubleArrayContentEquals"
+            primitive == PrimitiveType.Char -> "charArrayContentEquals"
+            primitive == PrimitiveType.Boolean -> "booleanArrayContentEquals"
             else -> "intArrayContentEquals"
         }
         sample("samples.collections.Arrays.ContentOperations.$sampleMethod")

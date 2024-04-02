@@ -704,7 +704,7 @@ public actual inline infix fun DoubleArray?.contentEquals(other: DoubleArray?): 
  * @param other the array to compare with this array.
  * @return `true` if the two arrays are structurally equal, `false` otherwise.
  * 
- * @sample samples.collections.Arrays.ContentOperations.intArrayContentEquals
+ * @sample samples.collections.Arrays.ContentOperations.booleanArrayContentEquals
  */
 @SinceKotlin("1.4")
 @kotlin.internal.InlineOnly
@@ -722,7 +722,7 @@ public actual inline infix fun BooleanArray?.contentEquals(other: BooleanArray?)
  * @param other the array to compare with this array.
  * @return `true` if the two arrays are structurally equal, `false` otherwise.
  * 
- * @sample samples.collections.Arrays.ContentOperations.intArrayContentEquals
+ * @sample samples.collections.Arrays.ContentOperations.charArrayContentEquals
  */
 @SinceKotlin("1.4")
 @kotlin.internal.InlineOnly
