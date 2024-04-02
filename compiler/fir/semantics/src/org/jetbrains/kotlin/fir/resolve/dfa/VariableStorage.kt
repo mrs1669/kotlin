@@ -5,20 +5,15 @@
 
 package org.jetbrains.kotlin.fir.resolve.dfa
 
-import org.jetbrains.kotlin.descriptors.Visibilities
-import org.jetbrains.kotlin.fir.*
-import org.jetbrains.kotlin.fir.declarations.*
-import org.jetbrains.kotlin.fir.declarations.impl.FirDefaultPropertyAccessor
-import org.jetbrains.kotlin.fir.declarations.utils.*
+import org.jetbrains.kotlin.fir.FirElement
+import org.jetbrains.kotlin.fir.declarations.FirDeclaration
 import org.jetbrains.kotlin.fir.expressions.*
 import org.jetbrains.kotlin.fir.references.symbol
-import org.jetbrains.kotlin.fir.resolve.fullyExpandedType
 import org.jetbrains.kotlin.fir.symbols.FirBasedSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.*
-import org.jetbrains.kotlin.fir.types.*
-import org.jetbrains.kotlin.types.SmartcastStability
+import org.jetbrains.kotlin.fir.unwrapFakeOverrides
 
-abstract class VariableStorage(private val session: FirSession) {
+abstract class VariableStorage {
     // These are basically hash sets, since they map each key to itself. The only point of having them as maps
     // is to deduplicate equal instances with lookups. The impact of that is questionable, but whatever.
     private val realVariables: MutableMap<RealVariable, RealVariable> = HashMap()
@@ -27,10 +22,8 @@ abstract class VariableStorage(private val session: FirSession) {
     private val nextVariableIndex: Int
         get() = realVariables.size + syntheticVariables.size + 1
 
-    abstract fun clear(): VariableStorage
-
     // TODO: this information should be stored in flows, as it depends on location
-    abstract fun RealVariable.isUnstable(): Boolean
+    abstract fun RealVariable.isUnstableLocalVar(): Boolean
 
     fun getLocalVariable(symbol: FirBasedSymbol<*>, isReceiver: Boolean): RealVariable? =
         RealVariable(symbol, isReceiver, null, null, nextVariableIndex).takeIfKnown()
@@ -96,7 +89,7 @@ abstract class VariableStorage(private val session: FirSession) {
         val prototype = RealVariable(symbol, isReceiver, dispatchReceiverVar, extensionReceiverVar, nextVariableIndex)
         val real = if (createReal) prototype.remember() else prototype.takeIfKnown() ?: return null
         return if (unwrapAlias)
-            flow.unwrapVariable(real).takeIf { it == real || !real.isUnstable() }
+            flow.unwrapVariable(real).takeIf { it == real || !real.isUnstableLocalVar() }
         else
             real
     }
@@ -112,11 +105,6 @@ abstract class VariableStorage(private val session: FirSession) {
 
     private fun RealVariable.remember(): RealVariable =
         realVariables.getOrPut(this) {
-            if (!isReceiver) {
-                stability = symbol.getStability(dispatchReceiver, session)
-                    .combineWithReceiverStability(dispatchReceiver?.stability)
-                    .combineWithReceiverStability(extensionReceiver?.stability)
-            }
             dispatchReceiver?.dependentVariables?.add(this)
             extensionReceiver?.dependentVariables?.add(this)
             this
@@ -185,58 +173,3 @@ private fun FirBasedSymbol<*>?.unwrapFakeOverridesIfNecessary(): FirBasedSymbol<
     if (this.dispatchReceiverType == null) return this
     return this.unwrapFakeOverrides()
 }
-
-private fun FirBasedSymbol<*>.getStability(dispatchReceiver: RealVariable?, session: FirSession): SmartcastStability {
-    return when (val fir = fir) {
-        !is FirVariable -> SmartcastStability.STABLE_VALUE // named object or containing class for a static field reference
-        is FirEnumEntry -> SmartcastStability.STABLE_VALUE
-        is FirErrorProperty -> SmartcastStability.STABLE_VALUE
-        is FirValueParameter -> SmartcastStability.STABLE_VALUE
-        is FirBackingField -> if (fir.isVal) SmartcastStability.STABLE_VALUE else SmartcastStability.MUTABLE_PROPERTY
-        is FirField -> when {
-            !fir.isFinal -> SmartcastStability.MUTABLE_PROPERTY
-            !fir.isInCurrentOrFriendModule(session) -> SmartcastStability.ALIEN_PUBLIC_PROPERTY
-            else -> SmartcastStability.STABLE_VALUE
-        }
-        is FirProperty -> when {
-            fir.isExpect -> SmartcastStability.EXPECT_PROPERTY
-            fir.delegate != null -> SmartcastStability.DELEGATED_PROPERTY
-            // Local vars are only *sometimes* unstable (when there are concurrent assignments). `FirDataFlowAnalyzer`
-            // will check that at each use site individually and produce `CAPTURED_VARIABLE` instead when necessary.
-            fir.isLocal -> SmartcastStability.STABLE_VALUE
-            fir.isVar -> SmartcastStability.MUTABLE_PROPERTY
-            fir.receiverParameter != null -> SmartcastStability.PROPERTY_WITH_GETTER
-            fir.getter !is FirDefaultPropertyAccessor? -> SmartcastStability.PROPERTY_WITH_GETTER
-            fir.visibility == Visibilities.Private -> SmartcastStability.STABLE_VALUE
-            !fir.isFinal && dispatchReceiver?.hasFinalType(session) != true -> SmartcastStability.PROPERTY_WITH_GETTER
-            !fir.isInCurrentOrFriendModule(session) -> SmartcastStability.ALIEN_PUBLIC_PROPERTY
-            else -> SmartcastStability.STABLE_VALUE
-        }
-    }
-}
-
-private fun FirVariable.isInCurrentOrFriendModule(session: FirSession): Boolean {
-    val propertyModuleData = originalOrSelf().moduleData
-    val currentModuleData = session.moduleData
-    return propertyModuleData == currentModuleData ||
-            propertyModuleData in currentModuleData.friendDependencies ||
-            propertyModuleData in currentModuleData.allDependsOnDependencies
-}
-
-private fun RealVariable.hasFinalType(session: FirSession): Boolean? =
-    fullyExpandedTypeSymbol(session)?.let { it is FirAnonymousObjectSymbol || it.isFinal }
-
-private fun RealVariable.fullyExpandedTypeSymbol(session: FirSession): FirClassSymbol<*>? = when (symbol) {
-    is FirClassSymbol<*> -> symbol.fullyExpandedClass(session)
-    is FirCallableSymbol<*> -> if (isReceiver)
-        symbol.resolvedReceiverTypeRef?.type?.fullyExpandedTypeSymbol(session)
-    else
-        symbol.resolvedReturnType.fullyExpandedTypeSymbol(session)
-    else -> null
-}
-
-private fun ConeKotlinType.fullyExpandedTypeSymbol(session: FirSession): FirClassSymbol<*>? =
-    (lowerBoundIfFlexible() as? ConeClassLikeType)?.fullyExpandedType(session)?.toSymbol(session) as FirClassSymbol<*>?
-
-private fun SmartcastStability.combineWithReceiverStability(receiverStability: SmartcastStability?): SmartcastStability =
-    if (receiverStability == null) this else maxOf(this, receiverStability)

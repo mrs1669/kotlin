@@ -43,13 +43,13 @@ import org.jetbrains.kotlin.types.ConstantValueKind
 import org.jetbrains.kotlin.types.SmartcastStability
 import org.jetbrains.kotlin.util.OperatorNameConventions
 
-class DataFlowAnalyzerContext(session: FirSession) {
+class DataFlowAnalyzerContext(private val session: FirSession) {
     val graphBuilder = ControlFlowGraphBuilder()
     val preliminaryLoopVisitor = PreliminaryLoopVisitor()
     val variablesClearedBeforeLoop = stackOf<List<RealVariable>>()
     internal val variableAssignmentAnalyzer = FirLocalVariableAssignmentAnalyzer()
 
-    var variableStorage: VariableStorage = VariableStorageImpl(session)
+    var variableStorage: VariableStorage = VariableStorageImpl()
         private set
 
     private var assignmentCounter = 0
@@ -63,13 +63,11 @@ class DataFlowAnalyzerContext(session: FirSession) {
         preliminaryLoopVisitor.resetState()
         variablesClearedBeforeLoop.reset()
         variableAssignmentAnalyzer.reset()
-        variableStorage = variableStorage.clear()
+        variableStorage = VariableStorageImpl()
     }
 
-    private inner class VariableStorageImpl(private val session: FirSession) : VariableStorage(session) {
-        override fun clear(): VariableStorage = VariableStorageImpl(session)
-
-        override fun RealVariable.isUnstable(): Boolean =
+    private inner class VariableStorageImpl : VariableStorage() {
+        override fun RealVariable.isUnstableLocalVar(): Boolean =
             variableAssignmentAnalyzer.isUnstableInCurrentScope(symbol.fir, types = null, session)
     }
 }
@@ -177,7 +175,10 @@ abstract class FirDataFlowAnalyzer(
         // TODO: that should never actually happen - aliasing information in that case could be outdated.
         val variable = variableStorage.getRealVariableWithoutUnwrappingAlias(flow, expression) ?: return null
         val types = flow.getTypeStatement(variable)?.exactType?.ifEmpty { null } ?: return null
-        val stability = if (variable.isUnstableLocalVar(types)) SmartcastStability.CAPTURED_VARIABLE else variable.stability
+        val stability = if (variable.isUnstableLocalVar(types))
+            SmartcastStability.CAPTURED_VARIABLE
+        else
+            variable.getStability(flow, components.session)
         return stability to types
     }
 
@@ -1106,17 +1107,16 @@ abstract class FirDataFlowAnalyzer(
         }
 
         val initializerVariable = variableStorage.getOrCreateIfReal(flow, initializer)
-        if (!hasExplicitType && propertyVariable.stability == SmartcastStability.STABLE_VALUE &&
-            initializerVariable is RealVariable &&
-            initializerVariable.stability == SmartcastStability.STABLE_VALUE && !initializerVariable.isUnstableLocalVar()
+        val propertyIsStable = propertyVariable.getStability(flow, components.session) == SmartcastStability.STABLE_VALUE
+        if (!hasExplicitType && propertyIsStable &&
+            initializerVariable is RealVariable && !initializerVariable.isUnstableLocalVar() &&
+            initializerVariable.getStability(flow, components.session) == SmartcastStability.STABLE_VALUE
         ) {
             // val a = ...
             // val b = a
             // if (b != null) { /* a != null */ }
             logicSystem.addLocalVariableAlias(flow, propertyVariable, initializerVariable)
-        } else if (initializerVariable != null && propertyVariable.stability == SmartcastStability.STABLE_VALUE &&
-            !(property.isLocal && property.isVar)
-        ) {
+        } else if (initializerVariable != null && propertyIsStable && !(property.isLocal && property.isVar)) {
             // Case 1:
             //   val b = x is String // initializer is synthetic
             //   if (b) { /* x is String */ }
