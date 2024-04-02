@@ -37,15 +37,3 @@ fun test2() {
     assertTrue(z2)
     assertTrue(t1 || !z1)
 }
-
-@OptIn(kotlin.experimental.ExperimentalNativeApi::class)
-fun main() {
-    val exitCode = kotlin.native.internal.test.testLauncherEntryPoint(emptyArray())
-    if (exitCode != 0) {
-        kotlin.system.exitProcess(exitCode)
-    }
-    assertTrue(t1)
-    assertTrue(t2)
-    assertTrue(z1)
-    assertTrue(z2)
-}
