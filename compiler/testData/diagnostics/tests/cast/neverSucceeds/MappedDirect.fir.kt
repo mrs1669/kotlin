@@ -16,17 +16,17 @@ fun test(
   js as JString
   js as JCS
   js as CharSequence
-  js as String
+  js <!CAST_NEVER_SUCCEEDS!>as<!> String
 
   cs as JString
   cs as JCS
   cs as CharSequence
-  cs as String
+  cs <!CAST_NEVER_SUCCEEDS!>as<!> String
 
   jcs as JString
   jcs as JCS
   jcs as CharSequence
-  jcs as String
+  jcs <!CAST_NEVER_SUCCEEDS!>as<!> String
 
   jcs <!CAST_NEVER_SUCCEEDS!>as<!> Int
   s <!CAST_NEVER_SUCCEEDS!>as<!> java.lang.Integer
