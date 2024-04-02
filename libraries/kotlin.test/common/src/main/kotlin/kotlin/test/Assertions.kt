@@ -356,7 +356,8 @@ public fun assertContains(charSequence: CharSequence, regex: Regex, message: Str
 /**
  * Asserts that the [expected] iterable is *structurally* equal to the [actual] iterable, with an optional [message].
  *
- * Two iterables are considered structurally equal if they have the same size, and elements at corresponding indices are equal.
+ * Two iterables are considered structurally equal if they have the same size,
+ * and elements at corresponding positions, following the iteration order, are equal.
  * Elements are compared for equality using the [equals][Any.equals] function.
  * For floating point numbers, this means `NaN` is equal to itself and `-0.0` is not equal to `0.0`.
  *
@@ -378,7 +379,8 @@ public fun <@OnlyInputTypes T> assertContentEquals(expected: Set<T>?, actual: Se
 /**
  * Asserts that the [expected] sequence is *structurally* equal to the [actual] sequence, with an optional [message].
  *
- * Two sequences are considered structurally equal if they have the same size, and elements at corresponding indices are equal.
+ * Two sequences are considered structurally equal if they have the same size,
+ * and elements at corresponding positions, following the iteration order, are equal.
  * Elements are compared for equality using the [equals][Any.equals] function.
  * For floating point numbers, this means `NaN` is equal to itself and `-0.0` is not equal to `0.0`.
  *
