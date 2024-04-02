@@ -92,6 +92,60 @@ public class Foo {
         fatalError()
     }
 }
+/**
+demo comment for packageless object
+*/
+public class OBJECT_NO_PACKAGE {
+    public class Foo {
+        public init() {
+            fatalError()
+        }
+    }
+    public class Bar {
+        public class CLASS_INSIDE_CLASS_INSIDE_OBJECT {
+            public init() {
+                fatalError()
+            }
+        }
+        public var i: Swift.Int32 {
+            get {
+                fatalError()
+            }
+        }
+        public func bar() -> Swift.Int32 {
+            fatalError()
+        }
+        public init(
+            i: Swift.Int32
+        ) {
+            fatalError()
+        }
+    }
+    public static var shared: Swift.Int32 {
+        get {
+            fatalError()
+        }
+    }
+    public var value: Swift.Int32 {
+        get {
+            fatalError()
+        }
+    }
+    public var variable: Swift.Int32 {
+        get {
+            fatalError()
+        }
+        set {
+            fatalError()
+        }
+    }
+    private init() {
+        fatalError()
+    }
+    public func foo() -> Swift.Int32 {
+        fatalError()
+    }
+}
 public extension main.namespace.deeper {
     public class NAMESPACED_CLASS {
         public init() {
@@ -158,6 +212,68 @@ public extension main.namespace.deeper {
             fatalError()
         }
         public init() {
+            fatalError()
+        }
+    }
+    /**
+    demo comment for packaged object
+    */
+    public class OBJECT_WITH_PACKAGE {
+        public class Foo {
+            public init() {
+                fatalError()
+            }
+        }
+        public class Bar {
+            /**
+            * demo comment for inner object
+            */
+            public class OBJECT_INSIDE_CLASS {
+                public static var shared: Swift.Int32 {
+                    get {
+                        fatalError()
+                    }
+                }
+                private init() {
+                    fatalError()
+                }
+            }
+            public var i: Swift.Int32 {
+                get {
+                    fatalError()
+                }
+            }
+            public func bar() -> Swift.Int32 {
+                fatalError()
+            }
+            public init(
+                i: Swift.Int32
+            ) {
+                fatalError()
+            }
+        }
+        public static var shared: Swift.Int32 {
+            get {
+                fatalError()
+            }
+        }
+        public var value: Swift.Int32 {
+            get {
+                fatalError()
+            }
+        }
+        public var variable: Swift.Int32 {
+            get {
+                fatalError()
+            }
+            set {
+                fatalError()
+            }
+        }
+        private init() {
+            fatalError()
+        }
+        public func foo() -> Swift.Int32 {
             fatalError()
         }
     }

@@ -15,8 +15,6 @@ open class OPEN_CLASS
 
 class INHERITANCE_SINGLE_CLASS : OPEN_CLASS
 
-object OBJECT
-
 data class DATA_CLASS(val a: Int)
 
 data class DATA_CLASS_WITH_REF(val o: OBJECT)
