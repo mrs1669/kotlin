@@ -12,10 +12,7 @@ import org.jetbrains.kotlin.sir.util.*
 import org.jetbrains.kotlin.sir.bridge.BridgeRequest
 import org.jetbrains.kotlin.sir.bridge.createFunctionBodyFromRequest
 import org.jetbrains.kotlin.sir.providers.source.KotlinSource
-import org.jetbrains.kotlin.sir.visitors.SirVisitorVoid
 import org.jetbrains.kotlin.utils.addIfNotNull
-import org.jetbrains.sir.passes.SirPass
-import org.jetbrains.sir.passes.run
 
 internal fun SirModule.buildFunctionBridges(): List<BridgeRequest> {
     return BridgeGenerationPass.run(this)
@@ -29,26 +26,27 @@ private object BridgeGenerationPass {
             container
                 .allCallables()
                 .filterIsInstance<SirFunction>()
-                .map { it.toBridgeRequest() }
+                .map { it.constructBridgeRequests() }
                 .flatten()
         )
 
         requests.addAll(
             container
                 .allVariables()
-                .map { it.toBridgeRequest() }
+                .map { it.constructBridgeRequests() }
                 .flatten()
         )
 
-        (container as? SirModule)?.let {
-            requests.addAll(container.allExtensions().flatMap { run(it) })
-        }
-        requests.addAll(container.allClasses().flatMap { run(it) })
+        requests.addAll(
+            container
+                .allContainers()
+                .flatMap { run(it) }
+        )
 
         return requests.toList()
     }
 
-    private fun SirFunction.toBridgeRequest(): List<BridgeRequest> {
+    private fun SirFunction.constructBridgeRequests(): List<BridgeRequest> {
         val fqName = ((origin as? KotlinSource)?.symbol as? KtFunctionLikeSymbol)
             ?.callableIdIfNonLocal?.asSingleFqName()
             ?.pathSegments()?.map { it.toString() }
@@ -59,7 +57,7 @@ private object BridgeGenerationPass {
         )
     }
 
-    private fun SirVariable.toBridgeRequest(): List<BridgeRequest> {
+    private fun SirVariable.constructBridgeRequests(): List<BridgeRequest> {
         val fqName = ((origin as? KotlinSource)?.symbol as? KtVariableLikeSymbol)
             ?.callableIdIfNonLocal?.asSingleFqName()
             ?.pathSegments()?.map { it.toString() }
