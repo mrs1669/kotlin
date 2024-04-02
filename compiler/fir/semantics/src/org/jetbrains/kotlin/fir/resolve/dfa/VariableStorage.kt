@@ -18,7 +18,7 @@ import org.jetbrains.kotlin.fir.symbols.impl.*
 import org.jetbrains.kotlin.fir.types.*
 import org.jetbrains.kotlin.types.SmartcastStability
 
-class VariableStorage(private val session: FirSession) {
+abstract class VariableStorage(private val session: FirSession) {
     // These are basically hash sets, since they map each key to itself. The only point of having them as maps
     // is to deduplicate equal instances with lookups. The impact of that is questionable, but whatever.
     private val realVariables: MutableMap<RealVariable, RealVariable> = HashMap()
@@ -27,7 +27,10 @@ class VariableStorage(private val session: FirSession) {
     private val nextVariableIndex: Int
         get() = realVariables.size + syntheticVariables.size + 1
 
-    fun clear(): VariableStorage = VariableStorage(session)
+    abstract fun clear(): VariableStorage
+
+    // TODO: this information should be stored in flows, as it depends on location
+    abstract fun RealVariable.isUnstable(): Boolean
 
     fun getLocalVariable(symbol: FirBasedSymbol<*>, isReceiver: Boolean): RealVariable? =
         RealVariable(symbol, isReceiver, null, null, nextVariableIndex).takeIfKnown()
@@ -49,14 +52,14 @@ class VariableStorage(private val session: FirSession) {
     // If "something else" is a type/nullability statement, use `getOrCreateIfReal`; if it's `... == true/false`, use `get`.
     // The point is to only create variables and statements if they lead to useful conclusions; if a variable
     // does not exist, then no statements about it have been made, and if it's synthetic, none will be created later.
-    fun get(flow: Flow, fir: FirElement, unwrapAlias: Boolean): DataFlowVariable? =
-        getImpl(flow, fir, createReal = false, unwrapAlias)?.takeSyntheticIfKnown()
+    fun get(flow: Flow, fir: FirElement): DataFlowVariable? =
+        getImpl(flow, fir, createReal = false, unwrapAlias = true)?.takeSyntheticIfKnown()
 
-    fun getOrCreateIfReal(flow: Flow, fir: FirElement, unwrapAlias: Boolean): DataFlowVariable? =
-        getImpl(flow, fir, createReal = true, unwrapAlias)?.takeSyntheticIfKnown()
+    fun getOrCreateIfReal(flow: Flow, fir: FirElement): DataFlowVariable? =
+        getImpl(flow, fir, createReal = true, unwrapAlias = true)?.takeSyntheticIfKnown()
 
-    fun getOrCreate(flow: Flow, fir: FirElement, unwrapAlias: Boolean): DataFlowVariable =
-        getImpl(flow, fir, createReal = true, unwrapAlias)!!.rememberSynthetic()
+    fun getOrCreate(flow: Flow, fir: FirElement): DataFlowVariable? =
+        getImpl(flow, fir, createReal = true, unwrapAlias = true)?.rememberSynthetic()
 
     fun getRealVariableWithoutUnwrappingAlias(flow: Flow, fir: FirElement): RealVariable? =
         getImpl(flow, fir, createReal = false, unwrapAlias = false) as? RealVariable
@@ -73,7 +76,8 @@ class VariableStorage(private val session: FirSession) {
     // situations apart this function has somewhat inconsistent return values:
     //   1. if `fir` maps to a real variable, and `createReal` is true, it returns `RealVariable`
     //      that IS in the `realVariables` map (possibly just added there);
-    //   2. if `fir` maps to a real variable, but it's not in the map and `createReal` is false, it returns `null`;
+    //   2. if `fir` maps to a real variable, but it's not in the map and `createReal` is false,
+    //      or `unwrapAlias` is true but the variable is unstable, it returns `null`;
     //   3. if `fir` does not map to a real variable, it returns a `SyntheticVariable`
     //      that IS NOT in the `syntheticVariables` map, so either `takeIfKnown` or `remember` should be called.
     // This way synthetic variables can always be recognized 100% precisely, but using this function requires a bit of care.
@@ -91,7 +95,10 @@ class VariableStorage(private val session: FirSession) {
         val isReceiver = unwrapped is FirThisReceiverExpression
         val prototype = RealVariable(symbol, isReceiver, dispatchReceiverVar, extensionReceiverVar, nextVariableIndex)
         val real = if (createReal) prototype.remember() else prototype.takeIfKnown() ?: return null
-        return if (unwrapAlias) flow.unwrapVariable(real) else real
+        return if (unwrapAlias)
+            flow.unwrapVariable(real).takeIf { it == real || !real.isUnstable() }
+        else
+            real
     }
 
     private fun DataFlowVariable.takeSyntheticIfKnown(): DataFlowVariable? =
