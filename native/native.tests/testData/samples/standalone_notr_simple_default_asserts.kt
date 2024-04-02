@@ -1,9 +1,9 @@
-// KIND: STANDALONE
+// KIND: STANDALONE_NO_TR
+// IGNORE_NATIVE: optimizationMode=OPT
 
 import kotlin.test.*
 
-@Test
-fun assertEnabled() {
+fun main() {
     assertFailsWith<AssertionError> {
         @OptIn(kotlin.experimental.ExperimentalNativeApi::class)
         assert(false)

@@ -94,15 +94,27 @@ public class FirInfrastructureTestGenerated extends AbstractNativeBlackBoxTest {
     }
 
     @Test
-    @TestMetadata("regular_simple_asserts.kt")
-    public void testRegular_simple_asserts() {
-      runTest("native/native.tests/testData/samples/regular_simple_asserts.kt");
+    @TestMetadata("regular_simple_default_asserts.kt")
+    public void testRegular_simple_default_asserts() {
+      runTest("native/native.tests/testData/samples/regular_simple_default_asserts.kt");
     }
 
     @Test
     @TestMetadata("regular_simple_default_tr.kt")
     public void testRegular_simple_default_tr() {
       runTest("native/native.tests/testData/samples/regular_simple_default_tr.kt");
+    }
+
+    @Test
+    @TestMetadata("regular_simple_disabled_asserts.kt")
+    public void testRegular_simple_disabled_asserts() {
+      runTest("native/native.tests/testData/samples/regular_simple_disabled_asserts.kt");
+    }
+
+    @Test
+    @TestMetadata("regular_simple_enabled_asserts.kt")
+    public void testRegular_simple_enabled_asserts() {
+      runTest("native/native.tests/testData/samples/regular_simple_enabled_asserts.kt");
     }
 
     @Test
@@ -184,9 +196,21 @@ public class FirInfrastructureTestGenerated extends AbstractNativeBlackBoxTest {
     }
 
     @Test
-    @TestMetadata("standalone_notr_simple_asserts.kt")
-    public void testStandalone_notr_simple_asserts() {
-      runTest("native/native.tests/testData/samples/standalone_notr_simple_asserts.kt");
+    @TestMetadata("standalone_notr_simple_default_asserts.kt")
+    public void testStandalone_notr_simple_default_asserts() {
+      runTest("native/native.tests/testData/samples/standalone_notr_simple_default_asserts.kt");
+    }
+
+    @Test
+    @TestMetadata("standalone_notr_simple_disabled_asserts.kt")
+    public void testStandalone_notr_simple_disabled_asserts() {
+      runTest("native/native.tests/testData/samples/standalone_notr_simple_disabled_asserts.kt");
+    }
+
+    @Test
+    @TestMetadata("standalone_notr_simple_enabled_asserts.kt")
+    public void testStandalone_notr_simple_enabled_asserts() {
+      runTest("native/native.tests/testData/samples/standalone_notr_simple_enabled_asserts.kt");
     }
 
     @Test
@@ -232,15 +256,27 @@ public class FirInfrastructureTestGenerated extends AbstractNativeBlackBoxTest {
     }
 
     @Test
-    @TestMetadata("standalone_simple_asserts.kt")
-    public void testStandalone_simple_asserts() {
-      runTest("native/native.tests/testData/samples/standalone_simple_asserts.kt");
+    @TestMetadata("standalone_simple_default_asserts.kt")
+    public void testStandalone_simple_default_asserts() {
+      runTest("native/native.tests/testData/samples/standalone_simple_default_asserts.kt");
     }
 
     @Test
     @TestMetadata("standalone_simple_default_tr.kt")
     public void testStandalone_simple_default_tr() {
       runTest("native/native.tests/testData/samples/standalone_simple_default_tr.kt");
+    }
+
+    @Test
+    @TestMetadata("standalone_simple_disabled_asserts.kt")
+    public void testStandalone_simple_disabled_asserts() {
+      runTest("native/native.tests/testData/samples/standalone_simple_disabled_asserts.kt");
+    }
+
+    @Test
+    @TestMetadata("standalone_simple_enabled_asserts.kt")
+    public void testStandalone_simple_enabled_asserts() {
+      runTest("native/native.tests/testData/samples/standalone_simple_enabled_asserts.kt");
     }
 
     @Test
