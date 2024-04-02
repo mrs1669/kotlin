@@ -91,6 +91,12 @@ public class InfrastructureTestGenerated extends AbstractNativeBlackBoxTest {
     }
 
     @Test
+    @TestMetadata("regular_simple_asserts.kt")
+    public void testRegular_simple_asserts() {
+      runTest("native/native.tests/testData/samples/regular_simple_asserts.kt");
+    }
+
+    @Test
     @TestMetadata("regular_simple_default_tr.kt")
     public void testRegular_simple_default_tr() {
       runTest("native/native.tests/testData/samples/regular_simple_default_tr.kt");
@@ -175,6 +181,12 @@ public class InfrastructureTestGenerated extends AbstractNativeBlackBoxTest {
     }
 
     @Test
+    @TestMetadata("standalone_notr_simple_asserts.kt")
+    public void testStandalone_notr_simple_asserts() {
+      runTest("native/native.tests/testData/samples/standalone_notr_simple_asserts.kt");
+    }
+
+    @Test
     @TestMetadata("standalone_notr_simple_entry_point.kt")
     public void testStandalone_notr_simple_entry_point() {
       runTest("native/native.tests/testData/samples/standalone_notr_simple_entry_point.kt");
@@ -214,6 +226,12 @@ public class InfrastructureTestGenerated extends AbstractNativeBlackBoxTest {
     @TestMetadata("standalone_simple.kt")
     public void testStandalone_simple() {
       runTest("native/native.tests/testData/samples/standalone_simple.kt");
+    }
+
+    @Test
+    @TestMetadata("standalone_simple_asserts.kt")
+    public void testStandalone_simple_asserts() {
+      runTest("native/native.tests/testData/samples/standalone_simple_asserts.kt");
     }
 
     @Test
