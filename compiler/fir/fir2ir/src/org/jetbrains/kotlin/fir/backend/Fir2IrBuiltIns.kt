@@ -20,7 +20,7 @@ import org.jetbrains.kotlin.utils.addToStdlib.firstIsInstance
 
 class Fir2IrBuiltIns(
     private val components: Fir2IrComponents,
-    private val provider: Fir2IrSpecialSymbolProvider
+    private val provider: Fir2IrSpecialSymbolProvider?,
 ) : Fir2IrComponents by components {
     // ---------------------- special annotations ----------------------
 
@@ -75,7 +75,7 @@ class Fir2IrBuiltIns(
     // ---------------------- utils ----------------------
 
     private fun specialAnnotationIrSymbolById(classId: ClassId): IrClassSymbol? {
-        return provider.getClassSymbolById(classId)
+        return provider?.getClassSymbolById(classId)
     }
 
     private fun regularAnnotationFirSymbolById(id: ClassId): FirRegularClassSymbol? {
