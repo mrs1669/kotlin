@@ -39,7 +39,7 @@ object FirReturnsImpliesAnalyzer : FirControlFlowChecker(MppCheckerKind.Common) 
 
     override fun analyze(graph: ControlFlowGraph, reporter: DiagnosticReporter, context: CheckerContext) {
         val logicSystem = object : LogicSystem(context.session.typeContext) {
-            override val variableStorage: VariableStorageImpl
+            override val variableStorage: VariableStorage
                 get() = throw IllegalStateException("shouldn't be called")
         }
         analyze(graph, reporter, context, logicSystem)
@@ -60,7 +60,7 @@ object FirReturnsImpliesAnalyzer : FirControlFlowChecker(MppCheckerKind.Common) 
         //   1. trivial contracts: `returns() implies (x is T)` when `x`'s original type is `T`
         //   2. tautological contracts: `returnsNotNull() implies (x != null)` with a `return x`
         // In both cases `x` must not have been used in data flow analysis in any way, otherwise it would already have a variable.
-        val variableStorage = function.controlFlowGraphReference?.dataFlowInfo?.variableStorage as? VariableStorageImpl ?: return
+        val variableStorage = function.controlFlowGraphReference?.dataFlowInfo?.variableStorage ?: return
         val argumentVariables = Array(function.valueParameters.size + 1) { i ->
             val parameterSymbol = if (i > 0) {
                 function.valueParameters[i - 1].symbol
@@ -93,7 +93,7 @@ object FirReturnsImpliesAnalyzer : FirControlFlowChecker(MppCheckerKind.Common) 
         effect: ConeReturnsEffectDeclaration,
         function: FirFunction,
         logicSystem: LogicSystem,
-        variableStorage: VariableStorageImpl,
+        variableStorage: VariableStorage,
         argumentVariables: Array<RealVariable>,
         context: CheckerContext
     ): Boolean {
