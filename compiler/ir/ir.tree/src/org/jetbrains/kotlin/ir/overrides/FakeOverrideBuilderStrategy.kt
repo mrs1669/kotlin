@@ -17,9 +17,7 @@ import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.types.IrTypeProjection
 import org.jetbrains.kotlin.ir.types.extractTypeParameters
 import org.jetbrains.kotlin.ir.util.getPackageFragment
-import org.jetbrains.kotlin.ir.util.hasAnnotation
 import org.jetbrains.kotlin.ir.util.render
-import org.jetbrains.kotlin.name.StandardClassIds
 import org.jetbrains.kotlin.types.Variance
 
 /**
@@ -84,34 +82,28 @@ abstract class FakeOverrideBuilderStrategy(
         fromModule: ModuleDescriptor,
         toModule: ModuleDescriptor,
     ): Boolean {
+        if (fromModule == toModule) return true
+
         val fromModuleName = fromModule.name.asStringStripSpecialMarkers()
         val toModuleName = toModule.name.asStringStripSpecialMarkers()
 
         return fromModuleName == toModuleName || friendModules[fromModuleName]?.contains(toModuleName) == true
     }
 
-    private fun isVisibleForOverrideInClass(original: IrOverridableMember, clazz: IrClass) : Boolean {
+    private fun isVisibleForOverrideInClass(original: IrOverridableMember, clazz: IrClass): Boolean {
         return when {
             DescriptorVisibilities.isPrivate(original.visibility) -> false
             original.visibility == DescriptorVisibilities.INVISIBLE_FAKE -> false
-            original.visibility == DescriptorVisibilities.INTERNAL -> {
-                val thisModule = clazz.getPackageFragment().moduleDescriptor
-                val memberModule = original.getPackageFragment().moduleDescriptor
-
-                when {
-                    thisModule == memberModule -> true
-                    isInFriendModules(thisModule, memberModule) -> true
-                    // TODO: this is very questionable - KT-63381
-                    original.hasAnnotation(StandardClassIds.Annotations.PublishedApi) -> true
-                    else -> false
-                }
-            }
-            else -> {
+            original.visibility == DescriptorVisibilities.INTERNAL ->
+                isInFriendModules(
+                    clazz.getPackageFragment().moduleDescriptor,
+                    original.getPackageFragment().moduleDescriptor
+                )
+            else ->
                 original.visibility.visibleFromPackage(
                     clazz.getPackageFragment().packageFqName,
                     original.getPackageFragment().packageFqName
                 )
-            }
         }
     }
 

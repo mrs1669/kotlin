@@ -34301,6 +34301,12 @@ public class FirNativeCodegenBoxTestGenerated extends AbstractNativeCodegenBoxTe
       }
 
       @Test
+      @TestMetadata("doNotOverrideFromAnotherModule.kt")
+      public void testDoNotOverrideFromAnotherModule() {
+        runTest("compiler/testData/codegen/box/publishedApi/doNotOverrideFromAnotherModule.kt");
+      }
+
+      @Test
       @TestMetadata("inlineFromFriendModule.kt")
       public void testInlineFromFriendModule() {
         runTest("compiler/testData/codegen/box/publishedApi/inlineFromFriendModule.kt");
