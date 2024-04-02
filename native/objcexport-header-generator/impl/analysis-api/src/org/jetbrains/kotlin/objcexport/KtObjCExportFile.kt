@@ -15,7 +15,7 @@ import org.jetbrains.kotlin.objcexport.analysisApiUtils.getAllClassOrObjectSymbo
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.tooling.core.withClosure
 
-internal interface KtObjCExportFile {
+interface KtObjCExportFile {
     val fileName: String
     val packageFqName: FqName
 
