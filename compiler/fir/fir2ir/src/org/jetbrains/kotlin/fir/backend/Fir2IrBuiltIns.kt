@@ -22,10 +22,6 @@ class Fir2IrBuiltIns(
     private val components: Fir2IrComponents,
     private val provider: Fir2IrSpecialSymbolProvider
 ) : Fir2IrComponents by components {
-    init {
-        provider.initComponents(components)
-    }
-
     // ---------------------- special annotations ----------------------
 
     private val enhancedNullabilityAnnotationIrSymbol by lazy {
