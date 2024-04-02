@@ -27,8 +27,8 @@ public class SirModuleProviderImpl(
     private val seenModule: MutableMap<KtModule, SirModule> = mutableMapOf()
 
     override fun KtModule.sirModule(): SirModule = withSirAnalyse(sirSession, ktAnalysisSession) {
-        if (seenModule.containsKey(this@sirModule) == false) {
-            seenModule[this@sirModule] = buildModule {
+        seenModule.getOrPut(this@sirModule) {
+            buildModule {
                 name = moduleName()
                 // imports should be reworked - KT-66727
                 declarations += buildImport {
@@ -41,7 +41,6 @@ public class SirModuleProviderImpl(
                 declarations.forEach { it.parent = this }
             }
         }
-        seenModule.get(this@sirModule)!!
     }
 
     // TODO: Postprocess to make sure that module name is a correct Swift name

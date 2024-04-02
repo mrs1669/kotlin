@@ -25,7 +25,7 @@ public class SirDeclarationProviderImpl(
     private val visitedDeclarations: MutableMap<KtDeclarationSymbol, SirDeclaration> = mutableMapOf()
 
     override fun KtDeclarationSymbol.sirDeclaration(): SirDeclaration = withSirAnalyse(sirSession, ktAnalysisSession) {
-        if (!visitedDeclarations.containsKey(this@sirDeclaration)) {
+        if (!visitedDeclarations.containsKey(this@sirDeclaration)) { // todo: rework for getOrPut
             visitedDeclarations[this@sirDeclaration] = when (val ktSymbol = this@sirDeclaration) {
                 is KtNamedClassOrObjectSymbol -> {
                     ktSymbol.sirClass()
@@ -41,7 +41,7 @@ public class SirDeclarationProviderImpl(
                 }
                 else -> TODO("encountered unknown symbol type - $ktSymbol. Error system should be reworked KT-65980")
             }.apply {
-                setParent(getParent())
+                setParent(getSirParent())
             }
             // hack: to touch all children only after the class is already cached.
             // Will be removed for lazy implementation, can also be solved by using some kind of deferred/promise/future implementation

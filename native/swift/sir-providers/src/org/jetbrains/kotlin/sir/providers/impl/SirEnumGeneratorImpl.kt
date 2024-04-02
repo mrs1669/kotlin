@@ -13,6 +13,7 @@ import org.jetbrains.kotlin.sir.SirOrigin
 import org.jetbrains.kotlin.sir.builder.buildEnum
 import org.jetbrains.kotlin.sir.providers.SirEnumGenerator
 import org.jetbrains.kotlin.sir.util.setParent
+import org.jetbrains.kotlin.utils.addToStdlib.getOrPut
 
 // TODO: Handle different modules
 // Package Inflator should be rewritten to use this - during 3.1 of KT-66639
@@ -34,13 +35,10 @@ public class SirEnumGeneratorImpl : SirEnumGenerator {
         }
     }
 
-    private fun createEnum(fqName: FqName): SirEnum {
-        if (!createdEnums.containsKey(fqName.toString())) {
-            createdEnums[fqName.toString()] = buildEnum {
-                origin = SirOrigin.Namespace(fqName.pathSegments().map { it.asString() })
-                name = fqName.pathSegments().last().asString()
-            }
+    private fun createEnum(fqName: FqName): SirEnum = createdEnums.getOrPut(fqName.toString()) {
+        buildEnum {
+            origin = SirOrigin.Namespace(fqName.pathSegments().map { it.asString() })
+            name = fqName.pathSegments().last().asString()
         }
-        return createdEnums[fqName.toString()]!!
     }
 }

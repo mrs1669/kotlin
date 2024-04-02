@@ -6,7 +6,6 @@
 package org.jetbrains.kotlin.sir.util
 
 import org.jetbrains.kotlin.sir.*
-import org.jetbrains.kotlin.sir.builder.*
 
 val SirCallable.allParameters: List<SirParameter>
     get() = when (this) {

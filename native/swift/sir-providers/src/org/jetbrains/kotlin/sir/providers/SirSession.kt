@@ -52,7 +52,7 @@ public interface SirSession :
 
     override fun KtDeclarationSymbol.sirDeclaration(): SirDeclaration = with(declarationProvider) { this@sirDeclaration.sirDeclaration() }
 
-    override fun KtDeclarationSymbol.getParent(): SirDeclarationParent = with(parentProvider) { this@getParent.getParent() }
+    override fun KtDeclarationSymbol.getSirParent(): SirDeclarationParent = with(parentProvider) { this@getSirParent.getSirParent() }
 
     override fun KtModule.sirModule(): SirModule = with(moduleProvider) { this@sirModule.sirModule() }
 
@@ -86,10 +86,14 @@ public interface SirDeclarationProvider {
 }
 
 /**
- * Lookup for SirParent for any kotlin declaration
+ * Given [KtDeclarationSymbol] will produce [SirDeclarationParent], representing the parent for corresponding sir node.
+ *
+ * For example, given the top level function without a package - will return SirModule that should declare that declarations.
+ * Or, given the top level function with a package - will return SirExtension for that package.
+ *
  */
 public interface SirParentProvider {
-    public fun KtDeclarationSymbol.getParent(): SirDeclarationParent
+    public fun KtDeclarationSymbol.getSirParent(): SirDeclarationParent
 }
 
 /**

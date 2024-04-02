@@ -12,7 +12,6 @@ import org.jetbrains.kotlin.sir.builder.buildExtension
 import org.jetbrains.kotlin.sir.providers.SirParentProvider
 import org.jetbrains.kotlin.sir.providers.SirSession
 import org.jetbrains.kotlin.sir.providers.utils.withSirAnalyse
-import org.jetbrains.kotlin.sir.util.SirSwiftModule
 import org.jetbrains.kotlin.sir.util.setParent
 
 public class SirParentProviderImpl(
@@ -22,8 +21,8 @@ public class SirParentProviderImpl(
 
     private val createdExtensionsForModule: MutableMap<SirModule, MutableMap<SirEnum, SirExtension>> = mutableMapOf()
 
-    override fun KtDeclarationSymbol.getParent(): SirDeclarationContainer = withSirAnalyse(sirSession, ktAnalysisSession) {
-        val symbol = this@getParent
+    override fun KtDeclarationSymbol.getSirParent(): SirDeclarationContainer = withSirAnalyse(sirSession, ktAnalysisSession) {
+        val symbol = this@getSirParent
         val parentSymbol = symbol.getContainingSymbol()
 
         if (parentSymbol == null) {
@@ -42,7 +41,7 @@ public class SirParentProviderImpl(
                 val extensionsInModule = createdExtensionsForModule.getOrPut(containingModule) { mutableMapOf() }
                 val extensionForPackage = extensionsInModule.getOrPut(enumAsPackage) {
                     buildExtension {
-                        origin = SirOrigin.Namespace(packageFqName.pathSegments().map { it.toString() })
+                        origin = enumAsPackage.origin
 
                         extendedType = SirNominalType(enumAsPackage)
                         visibility = SirVisibility.PUBLIC
