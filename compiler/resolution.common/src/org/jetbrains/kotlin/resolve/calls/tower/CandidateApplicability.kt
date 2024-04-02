@@ -124,7 +124,7 @@ enum class CandidateApplicability {
 }
 
 /**
- * Introduced for `CandidateApplicability.isSuccess` spefifically.
+ * Introduced for `CandidateApplicability.isSuccess` specifically.
  * Warns about accidental uses of `CandidateApplicability.isSuccess`
  * instead of `Candidate.isSuccessful`.
  */
