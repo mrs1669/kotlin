@@ -85,6 +85,7 @@ internal class KtFirReferenceShortener(
             ?: file
 
         val firDeclaration = declarationToVisit.getCorrespondingFirElement() ?: return ShortenCommandImpl(
+            @Suppress("DEPRECATION")
             file.createSmartPointer(),
             importsToAdd = emptySet(),
             starImportsToAdd = emptySet(),
@@ -128,6 +129,7 @@ internal class KtFirReferenceShortener(
         )
         kDocCollector.visitElement(declarationToVisit)
 
+        @Suppress("DEPRECATION")
         return ShortenCommandImpl(
             file.createSmartPointer(),
             additionalImports.simpleImports,
