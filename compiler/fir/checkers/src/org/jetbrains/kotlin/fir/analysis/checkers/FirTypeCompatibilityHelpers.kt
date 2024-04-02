@@ -81,10 +81,11 @@ internal fun ConeKotlinType.toTypeInfo(session: FirSession): TypeInfo {
     )
 }
 
-internal fun ConeKotlinType.toKotlinTypeIfPlatform(session: FirSession): ConeClassLikeType? {
-    val kotlinClassId = session.platformClassMapper.getCorrespondingKotlinClass(classId)
-    return kotlinClassId?.constructClassLikeType(typeArguments, isNullable, attributes)
-}
+internal fun ConeKotlinType.toKotlinTypeIfPlatform(session: FirSession): ConeClassLikeType? =
+    session.platformClassMapper.getCorrespondingKotlinClass(classId)?.constructClassLikeType(typeArguments, isNullable, attributes)
+
+internal fun ConeKotlinType.toPlatformTypeIfKotlin(session: FirSession): ConeClassLikeType? =
+    session.platformClassMapper.getCorrespondingPlatformClass(classId)?.constructClassLikeType(typeArguments, isNullable, attributes)
 
 internal class ArgumentInfo(
     val argument: FirExpression,
@@ -116,13 +117,16 @@ internal fun FirExpression.toArgumentInfo(context: CheckerContext) =
         context.session,
     )
 
+private fun ConeKotlinType.getCounterpartRelativelyToPlatform(session: FirSession): ConeKotlinType? =
+    toKotlinTypeIfPlatform(session) ?: toPlatformTypeIfKotlin(session)
+
 /**
  * This function de-facto replicates a single-side check from [org.jetbrains.kotlin.types.CastDiagnosticsUtil.isRelated].
  */
 private fun TypeInfo.isSubtypeOf(other: TypeInfo, context: CheckerContext): Boolean {
     val isDirectSubtype = notNullType.isSubtypeOf(other.notNullType, context.session)
-    val kotlinOtherTypeIfJava = other.notNullType.toKotlinTypeIfPlatform(context.session)
-    return isDirectSubtype || kotlinOtherTypeIfJava?.let { notNullType.isSubtypeOf(it, context.session) } == true
+    val counterpart = other.notNullType.getCounterpartRelativelyToPlatform(context.session)
+    return isDirectSubtype || counterpart?.let { notNullType.isSubtypeOf(it, context.session) } == true
 }
 
 internal fun areUnrelated(a: TypeInfo, b: TypeInfo, context: CheckerContext): Boolean {
