@@ -162,10 +162,8 @@ abstract class FirDataFlowAnalyzer(
      *
      * When [types] are **not** provided, **any** assignments cause the variable to be considered unstable.
      */
-    private fun RealVariable.stabilityInCurrentScope(types: Set<ConeKotlinType>?): SmartcastStability =
-        if (context.variableAssignmentAnalyzer.isUnstableInCurrentScope(symbol.fir, types, components.session))
-            SmartcastStability.CAPTURED_VARIABLE
-        else stability
+    private fun RealVariable.isUnstableLocalVar(types: Set<ConeKotlinType>? = null): Boolean =
+        context.variableAssignmentAnalyzer.isUnstableInCurrentScope(symbol.fir, types, components.session)
 
     /**
      * Retrieve smartcast type information [FirDataFlowAnalyzer] may have for the specified variable access expression. Type information
@@ -179,7 +177,8 @@ abstract class FirDataFlowAnalyzer(
         // TODO: that should never actually happen - aliasing information in that case could be outdated.
         val variable = variableStorage.getRealVariableWithoutUnwrappingAlias(flow, expression) ?: return null
         val types = flow.getTypeStatement(variable)?.exactType?.ifEmpty { null } ?: return null
-        return variable.stabilityInCurrentScope(types) to types
+        val stability = if (variable.isUnstableLocalVar(types)) SmartcastStability.CAPTURED_VARIABLE else variable.stability
+        return stability to types
     }
 
     fun returnExpressionsOfAnonymousFunctionOrNull(function: FirAnonymousFunction): Collection<FirAnonymousFunctionReturnExpressionInfo>? =
@@ -1107,30 +1106,30 @@ abstract class FirDataFlowAnalyzer(
         }
 
         val initializerVariable = variableStorage.getOrCreateIfReal(flow, initializer)
-        if (initializerVariable is RealVariable) {
-            val isInitializerStable = initializerVariable.stabilityInCurrentScope(types = null) == SmartcastStability.STABLE_VALUE
-            if (!hasExplicitType && isInitializerStable && propertyVariable.stability == SmartcastStability.STABLE_VALUE) {
-                // val a = ...
-                // val b = a
-                // if (b != null) { /* a != null */ }
-                logicSystem.addLocalVariableAlias(flow, propertyVariable, initializerVariable)
-            } else {
-                // val a = ...
-                // val b = a?.x
-                // if (b != null) { /* a != null, but a.x could have changed */ }
-                logicSystem.translateVariableFromConditionInStatements(flow, initializerVariable, propertyVariable)
-            }
-        } else if (initializerVariable != null && propertyVariable.stability == SmartcastStability.STABLE_VALUE &&
-            !(property.isLocal && property.isVar) &&
-            (components.session.languageVersionSettings.supportsFeature(LanguageFeature.DfaBooleanVariables) ||
-                    !initializer.resolvedType.isBoolean)
+        if (!hasExplicitType && propertyVariable.stability == SmartcastStability.STABLE_VALUE &&
+            initializerVariable is RealVariable &&
+            initializerVariable.stability == SmartcastStability.STABLE_VALUE && !initializerVariable.isUnstableLocalVar()
         ) {
-            // val b = x is String
-            // if (b) { /* x is String */ }
-
-            // val b = x?.foo() // `x?.foo()` is synthetic
-            // if (b != null) { /* x != null */ }
-            logicSystem.translateVariableFromConditionInStatements(flow, initializerVariable, propertyVariable)
+            // val a = ...
+            // val b = a
+            // if (b != null) { /* a != null */ }
+            logicSystem.addLocalVariableAlias(flow, propertyVariable, initializerVariable)
+        } else if (initializerVariable != null && propertyVariable.stability == SmartcastStability.STABLE_VALUE &&
+            !(property.isLocal && property.isVar)
+        ) {
+            // Case 1:
+            //   val b = x is String // initializer is synthetic
+            //   if (b) { /* x is String */ }
+            // Case 2:
+            //   val b = x?.foo() // initializer is synthetic
+            //   if (b != null) { /* x != null */ }
+            // Case 3:
+            //   val b = x?.foo // if `foo` is mutable, then initializer is real, but unstable
+            //   if (b != null) { /* x != null, but x.foo could have changed */ }
+            val translateAll = components.session.languageVersionSettings.supportsFeature(LanguageFeature.DfaBooleanVariables)
+            logicSystem.translateVariableFromConditionInStatements(flow, initializerVariable, propertyVariable) {
+                it.takeIf { translateAll || it.condition.operation == Operation.EqNull || it.condition.operation == Operation.NotEqNull }
+            }
         }
 
         if (isAssignment) {
