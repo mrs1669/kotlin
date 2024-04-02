@@ -174,8 +174,8 @@ class AmbiguousInterceptedSymbol(val pluginNames: List<String>) : ResolutionDiag
 class MissingInnerClassConstructorReceiver(val candidateSymbol: FirRegularClassSymbol) : ResolutionDiagnostic(INAPPLICABLE)
 
 @OptIn(ApplicabilityDetail::class)
-val Collection<ResolutionDiagnostic>.anyUnsuccessful: Boolean get() = any { !it.applicability.isSuccess }
-val Collection<ResolutionDiagnostic>.allSuccessful: Boolean get() = !anyUnsuccessful
+val Collection<ResolutionDiagnostic>.allSuccessful: Boolean get() = all { it.applicability.isSuccess }
+val Collection<ResolutionDiagnostic>.anyUnsuccessful: Boolean get() = !allSuccessful
 
 @OptIn(ApplicabilityDetail::class)
 val ResolutionDiagnostic.isSuccess get() = applicability.isSuccess
