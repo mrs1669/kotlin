@@ -88,7 +88,7 @@ internal abstract class GenerateSPMPackageFromSwiftExport : DefaultTask() {
 
     private fun createHeaderTarget() {
         headerBridgePath.getFile().copyTo(
-            headerBridgeIncludePath.resolve("Kotlin.h")
+            headerBridgeIncludePath.resolve("${headerBridgeModule}.h")
         )
         headerBridgeIncludePath.resolve("module.modulemap").writeText(
             """
@@ -114,7 +114,7 @@ internal abstract class GenerateSPMPackageFromSwiftExport : DefaultTask() {
     }
 
     private fun createSwiftTarget() {
-        swiftApiModulePath.resolve("Kotlin.swift").writer().use { kotlinApi ->
+        swiftApiModulePath.resolve("${swiftApiModule}.swift").writer().use { kotlinApi ->
             swiftApiPath.get().asFile.reader().forEachLine {
                 kotlinApi.append(it).appendLine()
             }

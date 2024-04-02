@@ -16,6 +16,7 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinNativeBinaryContainer
 import org.jetbrains.kotlin.gradle.dsl.multiplatformExtension
 import org.jetbrains.kotlin.gradle.plugin.*
 import org.jetbrains.kotlin.gradle.plugin.mpp.*
+import org.jetbrains.kotlin.gradle.plugin.mpp.apple.FrameworkModule
 import org.jetbrains.kotlin.gradle.plugin.mpp.apple.FrameworkTask
 import org.jetbrains.kotlin.gradle.tasks.dependsOn
 import org.jetbrains.kotlin.gradle.tasks.locateOrRegisterTask
@@ -80,7 +81,6 @@ private fun Project.registerSwiftExportTask(
         packageBuildRoot = packageBuildRoot,
         packageGenerationTask = packageGenerationTask,
     )
-
     val frameworkTask = registerFrameworkTask(
         taskNamePrefix = taskNamePrefix,
         swiftApiModuleName = swiftApiModuleName,
@@ -237,12 +237,19 @@ private fun Project.registerFrameworkTask(
     val frameworkTaskName = taskNamePrefix + "Framework"
     val createFramework = locateOrRegisterTask<FrameworkTask>(frameworkTaskName) { task ->
 
-        val header = swiftExportTask.flatMap { it.parameters.headerBridgePath }
-        val konanHeader = layout.file(
-            provider {
+        val modules = swiftExportTask.map { exportTask ->
+            val swiftExportModule = FrameworkModule(
+                exportTask.parameters.bridgeModuleName.get(),
+                exportTask.parameters.headerBridgePath.asFile.get()
+            )
+
+            val kotlinModule = FrameworkModule(
+                "KotlinRuntime",
                 file(Distribution(konanDistribution.root.absolutePath).kotlinRuntimeForSwiftHeader)
-            }
-        )
+            )
+
+            listOf(swiftExportModule, kotlinModule)
+        }
 
         task.group = BasePlugin.BUILD_GROUP
         task.description = "Creates $taskNamePrefix Apple Framework"
@@ -250,7 +257,7 @@ private fun Project.registerFrameworkTask(
         task.frameworkName.set(swiftApiModuleName)
         task.bundleIdentifier.set(swiftApiModuleName.map { "com.jetbrains.$it" })
         task.binary.set(packageBuildTask.flatMap { it.packageLibraryPath })
-        task.headers.from(header, konanHeader)
+        task.modules.set(modules)
     }
     createFramework.dependsOn(packageBuildTask)
     return createFramework

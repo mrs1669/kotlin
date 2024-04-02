@@ -7,6 +7,7 @@ package org.jetbrains.kotlin.gradle.plugin.mpp.apple
 
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.*
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.provider.ProviderFactory
@@ -19,7 +20,10 @@ import org.jetbrains.kotlin.incremental.createDirectory
 import org.jetbrains.kotlin.incremental.deleteRecursivelyOrThrow
 import org.jetbrains.kotlin.konan.target.HostManager
 import java.io.File
+import java.io.Serializable
 import javax.inject.Inject
+
+internal data class FrameworkModule(val name: String, val header: File) : Serializable
 
 @DisableCachingByDefault
 internal abstract class FrameworkTask @Inject constructor(
@@ -36,9 +40,8 @@ internal abstract class FrameworkTask @Inject constructor(
     abstract val binary: RegularFileProperty
 
     @get:Optional
-    @get:InputFiles
-    @get:PathSensitive(PathSensitivity.RELATIVE)
-    abstract val headers: ConfigurableFileCollection
+    @get:Input
+    abstract val modules: ListProperty<FrameworkModule>
 
     @get:Input
     abstract val frameworkName: Property<String>
@@ -76,7 +79,7 @@ internal abstract class FrameworkTask @Inject constructor(
 
         copyBinary()
         copyHeaders()
-        createModuleMap(createUmbrella())
+        createModuleMap()
         createInfoPlist()
     }
 
@@ -86,43 +89,29 @@ internal abstract class FrameworkTask @Inject constructor(
         )
     }
 
-    private fun createUmbrella(): File? {
-        if (headers.asFileTree.isEmpty) {
-            return null
-        }
-
-        val umbrellaHeader = headerPath.getFile().resolve("${frameworkName.get()}.h").apply {
-            writeText(
-                """
-                |/*
-                |* Copyright 2010-2024 JetBrains s.r.o. and Kotlin Programming Language contributors.
-                |*/
-                |
-                |${
-                    headers.asFileTree.joinToString("\n") {
-                        """
-                        |#import "${it.name}"
-                        """.trimMargin()
-                    }
-                }
-                """.trimMargin()
-            )
-        }
-
-        return umbrellaHeader
-    }
-
-    private fun createModuleMap(umbrella: File?) {
+    private fun createModuleMap(umbrella: File? = null) {
         val umbrellaHeader = umbrella?.let { "umbrella header \"${it.name}\"" }
+        val modules = modules.getOrElse(emptyList())
 
         modulePath.getFile().resolve("module.modulemap").writeText(
             """
             |framework module ${frameworkName.get()} {
-            |   $umbrellaHeader
-            |
+            |   ${umbrellaHeader.orEmpty()}
             |   export *
-            |   module * { export * }
+            |   
+            |${
+                modules.joinToString("\n") {
+                    """
+                    |   module ${it.name} {
+                    |       header "${it.header.name}"
+                    |       export *
+                    |   }
+                    """.trimMargin()
+                }
+            }
             |
+            |   link "swiftExportBinary"
+            |   
             |   use Foundation
             |   requires objc    
             |}
@@ -151,7 +140,7 @@ internal abstract class FrameworkTask @Inject constructor(
     }
 
     private fun copyHeaders() {
-        headers.forEach {
+        modules.getOrElse(emptyList()).map { it.header }.forEach {
             it.copyTo(
                 headerPath.getFile().resolve(it.name)
             )
