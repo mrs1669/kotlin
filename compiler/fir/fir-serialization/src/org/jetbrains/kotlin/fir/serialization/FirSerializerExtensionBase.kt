@@ -5,6 +5,8 @@
 
 package org.jetbrains.kotlin.fir.serialization
 
+import org.jetbrains.kotlin.config.AnalysisFlags
+import org.jetbrains.kotlin.config.LanguageFeature
 import org.jetbrains.kotlin.constant.ConstantValue
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget
 import org.jetbrains.kotlin.fir.FirEvaluatorResult
@@ -13,6 +15,7 @@ import org.jetbrains.kotlin.fir.declarations.utils.evaluatedInitializer
 import org.jetbrains.kotlin.fir.declarations.utils.isConst
 import org.jetbrains.kotlin.fir.expressions.FirAnnotation
 import org.jetbrains.kotlin.fir.expressions.FirExpression
+import org.jetbrains.kotlin.fir.languageVersionSettings
 import org.jetbrains.kotlin.fir.render
 import org.jetbrains.kotlin.fir.serialization.constant.toConstantValue
 import org.jetbrains.kotlin.metadata.ProtoBuf
@@ -119,7 +122,17 @@ abstract class FirSerializerExtensionBase(
         val evaluatedInitializer = (property.evaluatedInitializer as? FirEvaluatorResult.Evaluated)?.result as? FirExpression
         evaluatedInitializer?.toConstantValue<ConstantValue<*>>(session, scopeSession, constValueProvider)?.let {
             proto.setExtension(protocol.compileTimeValue, annotationSerializer.valueProto(it).build())
-        } ?: require(!property.isConst) { "Const property has no const initializer expression. Got ${property.initializer?.render()}" }
+        } ?: absentInitializerGuard(property)
+    }
+
+    private fun absentInitializerGuard(property: FirProperty) {
+        if (property.isConst) {
+            require(property.initializer != null)
+            // KT-49303: TODO Refine the condition below, when empty initializer is allowed in metadata section of platform Klib
+            require(!session.languageVersionSettings.getFlag(AnalysisFlags.metadataCompilation) &&
+                        session.languageVersionSettings.supportsFeature(LanguageFeature.IntrinsicConstEvaluation)
+            ) { "Const property has no const initializer expression. Got ${property.render()}" }
+        }
     }
 
     override fun serializeEnumEntry(enumEntry: FirEnumEntry, proto: ProtoBuf.EnumEntry.Builder) {
