@@ -12,7 +12,7 @@ import org.jetbrains.kotlin.sir.builder.buildExtension
 import org.jetbrains.kotlin.sir.providers.SirParentProvider
 import org.jetbrains.kotlin.sir.providers.SirSession
 import org.jetbrains.kotlin.sir.providers.utils.withSirAnalyse
-import org.jetbrains.kotlin.sir.util.setParent
+import org.jetbrains.kotlin.sir.util.addChild
 
 public class SirParentProviderImpl(
     private val ktAnalysisSession: KtAnalysisSession,
@@ -40,14 +40,15 @@ public class SirParentProviderImpl(
                 val containingModule = symbol.getContainingModule().sirModule()
                 val extensionsInModule = createdExtensionsForModule.getOrPut(containingModule) { mutableMapOf() }
                 val extensionForPackage = extensionsInModule.getOrPut(enumAsPackage) {
-                    buildExtension {
-                        origin = enumAsPackage.origin
+                    containingModule.addChild {
+                        buildExtension {
+                            origin = enumAsPackage.origin
 
-                        extendedType = SirNominalType(enumAsPackage)
-                        visibility = SirVisibility.PUBLIC
+                            extendedType = SirNominalType(enumAsPackage)
+                            visibility = SirVisibility.PUBLIC
+                        }
                     }
                 }
-                extensionForPackage.setParent(containingModule)
                 extensionForPackage
             }
         } else {

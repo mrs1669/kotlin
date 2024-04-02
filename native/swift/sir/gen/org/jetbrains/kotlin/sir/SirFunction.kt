@@ -21,7 +21,7 @@ abstract class SirFunction : SirCallable() {
     abstract override val kind: SirCallableKind
     abstract override var body: SirFunctionBody?
     abstract val name: String
-    abstract val parameters: MutableList<SirParameter>
+    abstract val parameters: List<SirParameter>
     abstract val returnType: SirType
     abstract override var documentation: String?
 

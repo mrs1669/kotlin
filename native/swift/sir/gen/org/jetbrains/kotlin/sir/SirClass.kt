@@ -14,7 +14,7 @@ import org.jetbrains.kotlin.sir.visitors.SirVisitor
 /**
  * Generated from: [org.jetbrains.kotlin.sir.tree.generator.SwiftIrTree.class]
  */
-abstract class SirClass : SirDeclarationContainer(), SirNamedDeclaration {
+abstract class SirClass : SirMutableDeclarationContainer(), SirNamedDeclaration {
     abstract override val origin: SirOrigin
     abstract override val visibility: SirVisibility
     abstract override var documentation: String?

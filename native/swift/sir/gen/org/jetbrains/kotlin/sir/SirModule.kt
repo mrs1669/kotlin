@@ -14,7 +14,7 @@ import org.jetbrains.kotlin.sir.visitors.SirVisitor
 /**
  * Generated from: [org.jetbrains.kotlin.sir.tree.generator.SwiftIrTree.module]
  */
-abstract class SirModule : SirDeclarationContainer(), SirNamed {
+abstract class SirModule : SirMutableDeclarationContainer(), SirNamed {
     abstract override val declarations: MutableList<SirDeclaration>
     abstract override val name: String
 

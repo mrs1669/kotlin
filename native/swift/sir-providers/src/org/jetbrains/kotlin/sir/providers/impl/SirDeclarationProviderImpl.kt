@@ -15,7 +15,7 @@ import org.jetbrains.kotlin.sir.providers.SirDeclarationProvider
 import org.jetbrains.kotlin.sir.providers.SirSession
 import org.jetbrains.kotlin.sir.providers.source.KotlinSource
 import org.jetbrains.kotlin.sir.providers.utils.withSirAnalyse
-import org.jetbrains.kotlin.sir.util.setParent
+import org.jetbrains.kotlin.sir.util.addChild
 
 public class SirDeclarationProviderImpl(
     private val ktAnalysisSession: KtAnalysisSession,
@@ -25,33 +25,41 @@ public class SirDeclarationProviderImpl(
     private val visitedDeclarations: MutableMap<KtDeclarationSymbol, SirDeclaration> = mutableMapOf()
 
     override fun KtDeclarationSymbol.sirDeclaration(): SirDeclaration = withSirAnalyse(sirSession, ktAnalysisSession) {
-        if (!visitedDeclarations.containsKey(this@sirDeclaration)) { // todo: rework for getOrPut
-            visitedDeclarations[this@sirDeclaration] = when (val ktSymbol = this@sirDeclaration) {
-                is KtNamedClassOrObjectSymbol -> {
-                    ktSymbol.sirClass()
+        val parent = getSirParent() as? SirMutableDeclarationContainer
+            ?: throw IllegalStateException(
+                "Encountered parent that is not mutable declaration - ${getSirParent()}. " +
+                        "Cannot add child - abort transforming symbol ${this@sirDeclaration}"
+            )
+        visitedDeclarations.getOrPut(this@sirDeclaration) {
+            parent.addChild {
+                val res = when (val ktSymbol = this@sirDeclaration) {
+                    is KtNamedClassOrObjectSymbol -> {
+                        ktSymbol.sirClass()
+                    }
+                    is KtConstructorSymbol -> {
+                        ktSymbol.sirInit()
+                    }
+                    is KtFunctionLikeSymbol -> {
+                        ktSymbol.sirFunction()
+                    }
+                    is KtVariableSymbol -> {
+                        ktSymbol.sirVariable()
+                    }
+                    else -> TODO("encountered unknown symbol type - $ktSymbol. Error system should be reworked KT-65980")
                 }
-                is KtConstructorSymbol -> {
-                    ktSymbol.sirInit()
-                }
-                is KtFunctionLikeSymbol -> {
-                    ktSymbol.sirFunction()
-                }
-                is KtVariableSymbol -> {
-                    ktSymbol.sirVariable()
-                }
-                else -> TODO("encountered unknown symbol type - $ktSymbol. Error system should be reworked KT-65980")
-            }.apply {
-                setParent(getSirParent())
+                visitedDeclarations[this@sirDeclaration] = res
+                res
             }
-            // hack: to touch all children only after the class is already cached.
-            // Will be removed for lazy implementation, can also be solved by using some kind of deferred/promise/future implementation
-            if (this@sirDeclaration is KtNamedClassOrObjectSymbol) {
-                val symbol = this@sirDeclaration
-                symbol.getCombinedDeclaredMemberScope().extractDeclarations()
-                    .toList() // without `toList` actually prints nothing.
-            }
+                .also {
+                    // hack: to touch all children only after the class is already cached.
+                    // Will be removed for lazy implementation, can also be solved by using some kind of deferred/promise/future implementation
+                    if (this@sirDeclaration is KtNamedClassOrObjectSymbol) {
+                        val symbol = this@sirDeclaration
+                        symbol.getCombinedDeclaredMemberScope().extractDeclarations()
+                            .toList() // without `toList` actually prints nothing.
+                    }
+                }
         }
-        visitedDeclarations[this@sirDeclaration]!!
     }
 
     context(KtAnalysisSession, SirSession)
