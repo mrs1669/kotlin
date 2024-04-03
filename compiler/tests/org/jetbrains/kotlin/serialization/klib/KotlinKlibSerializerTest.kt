@@ -105,4 +105,8 @@ class KotlinKlibSerializerTest : TestCaseWithTmpdir() {
     fun testFieldAnnotations() {
         doTest("klib/fieldAnnotations.kt")
     }
+
+    fun testComplexDeprecation() {
+        doTest("klib/complexDeprecation.kt")
+    }
 }
